@@ -6,6 +6,7 @@
 import { produce } from 'immer'
 import { Ledfx } from '../../api/ledfx'
 import type { IStore, IOpenRgbDevice } from '../useStore'
+import nameToIcon from '../../utils/nameToIcon'
 
 const storeActions = (set: any) => ({
   scanForOpenRgbDevices: async () => {
@@ -66,7 +67,9 @@ const storeActions = (set: any) => ({
     return false
   },
   scanForDevices: async () => {
-    const resp = await Ledfx('/api/find_devices', 'POST', {})
+    const resp = await Ledfx('/api/find_devices', 'POST', {
+      name_to_icon: nameToIcon
+    })
     if (!(resp && resp.status === 'success')) {
       set(
         produce((state: IStore) => {
