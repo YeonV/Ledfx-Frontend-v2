@@ -128,15 +128,17 @@ export default function BarBottom() {
         showLabels
         style={{ bottom: botHeight, color: '#a1998e' }}
       >
-        <BottomNavigationAction
-          sx={{ minWidth: 50 }}
-          component={Link}
-          className="step-one"
-          label={features.dashboard ? 'Dashboard' : 'Home'}
-          value="/"
-          to="/"
-          icon={features.dashboard ? <Dashboard /> : <Home />}
-        />
+        {!(window.localStorage.getItem('guestmode') === 'activated') && (
+          <BottomNavigationAction
+            sx={{ minWidth: 50 }}
+            component={Link}
+            className="step-one"
+            label={features.dashboard ? 'Dashboard' : 'Home'}
+            value="/"
+            to="/"
+            icon={features.dashboard ? <Dashboard /> : <Home />}
+          />
+        )}
         <BottomNavigationAction
           label="Devices"
           value="/Devices"
@@ -170,41 +172,44 @@ export default function BarBottom() {
           // }}
         />
 
-        {features.integrations && (
+        {features.integrations &&
+          !(window.localStorage.getItem('guestmode') === 'activated') && (
+            <BottomNavigationAction
+              label="Integrations"
+              value="/Integrations"
+              component={Link}
+              to="/Integrations"
+              icon={<ElectricalServices />}
+              style={
+                bottomBarOpen.indexOf('Integrations') > -1
+                  ? { color: theme.palette.primary.main }
+                  : {}
+              }
+              // onContextMenu={(e: any) => {
+              //   e.preventDefault();
+              //   setBottomBarOpen('Integrations');
+              // }}
+            />
+          )}
+
+        {!(window.localStorage.getItem('guestmode') === 'activated') && (
           <BottomNavigationAction
-            label="Integrations"
-            value="/Integrations"
+            label="Settings"
+            value="/Settings"
+            icon={<Settings />}
             component={Link}
-            to="/Integrations"
-            icon={<ElectricalServices />}
+            to="/Settings"
             style={
-              bottomBarOpen.indexOf('Integrations') > -1
+              bottomBarOpen.indexOf('Settings') > -1
                 ? { color: theme.palette.primary.main }
                 : {}
             }
             // onContextMenu={(e: any) => {
             //   e.preventDefault();
-            //   setBottomBarOpen('Integrations');
+            //   setBottomBarOpen('Settings');
             // }}
           />
         )}
-
-        <BottomNavigationAction
-          label="Settings"
-          value="/Settings"
-          icon={<Settings />}
-          component={Link}
-          to="/Settings"
-          style={
-            bottomBarOpen.indexOf('Settings') > -1
-              ? { color: theme.palette.primary.main }
-              : {}
-          }
-          // onContextMenu={(e: any) => {
-          //   e.preventDefault();
-          //   setBottomBarOpen('Settings');
-          // }}
-        />
       </BottomNavigation>
       {features.spotify && (
         <SpotifyFabFree
@@ -262,36 +267,38 @@ export default function BarBottom() {
           />
         </>
       )}
-      <AddButton
-        setBackdrop={setBackdrop}
-        sx={{
-          bottom: botHeight + 65,
-          position: 'fixed',
-          marginLeft: leftOpen ? `${drawerWidth / 2}px` : 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          transition: leftOpen
-            ? theme.transitions.create(['margin'], {
-                easing: theme.transitions.easing.easeOut,
-                duration: theme.transitions.duration.enteringScreen
-              })
-            : theme.transitions.create(['margin'], {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen
-              }),
-          '&.MuiSpeedDial-directionUp, &.MuiSpeedDial-directionLeft': {
-            bottom: theme.spacing(2) + 25
-          },
-          '& > button.MuiFab-primary': {
-            backgroundColor: theme.palette.secondary.main
-          },
-          '& .MuiSpeedDialAction-staticTooltipLabel': {
-            backgroundColor: 'transparent',
-            marginLeft: '-1rem'
-          }
-        }}
-        className="step-four"
-      />
+      {!(window.localStorage.getItem('guestmode') === 'activated') && (
+        <AddButton
+          setBackdrop={setBackdrop}
+          sx={{
+            bottom: botHeight + 65,
+            position: 'fixed',
+            marginLeft: leftOpen ? `${drawerWidth / 2}px` : 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            transition: leftOpen
+              ? theme.transitions.create(['margin'], {
+                  easing: theme.transitions.easing.easeOut,
+                  duration: theme.transitions.duration.enteringScreen
+                })
+              : theme.transitions.create(['margin'], {
+                  easing: theme.transitions.easing.sharp,
+                  duration: theme.transitions.duration.leavingScreen
+                }),
+            '&.MuiSpeedDial-directionUp, &.MuiSpeedDial-directionLeft': {
+              bottom: theme.spacing(2) + 25
+            },
+            '& > button.MuiFab-primary': {
+              backgroundColor: theme.palette.secondary.main
+            },
+            '& .MuiSpeedDialAction-staticTooltipLabel': {
+              backgroundColor: 'transparent',
+              marginLeft: '-1rem'
+            }
+          }}
+          className="step-four"
+        />
+      )}
       <Backdrop
         style={{ zIndex: 1, backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
         open={backdrop}
