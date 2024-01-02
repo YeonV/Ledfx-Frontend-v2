@@ -5,7 +5,7 @@
   "author": "YeonV aka Blade",
   "private": true,
   "main": "public/electron.js",
-  "homepage": ".",
+  "homepage": "/",
   "engines": {
     "node": ">=20"
   },

@@ -41,6 +41,7 @@ if (require('electron-squirrel-startup')) {
 }
 
 const base32Decode = require('base32-decode')
+require('events').EventEmitter.defaultMaxListeners = 15;
 
 function generateHOTP(secret, counter) {
   const decodedSecret = base32Decode(secret, 'RFC4648');

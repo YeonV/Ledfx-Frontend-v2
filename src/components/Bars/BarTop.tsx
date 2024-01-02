@@ -9,7 +9,8 @@ import {
   GitHub,
   ChevronLeft,
   Login,
-  Logout
+  Logout,
+  MenuBook
 } from '@mui/icons-material'
 import isElectron from 'is-electron'
 import {
@@ -452,7 +453,14 @@ const TopBar = () => {
                   />
                 )}
                 {/* <Doc type={'menuItem'} label={'Docs'} onClick={() => setAnchorEl(null)} /> */}
-
+                <MenuItem
+                  onClick={() => window.open('https://blade.hamza.stream/')}
+                >
+                  <ListItemIcon>
+                    <MenuBook />
+                  </ListItemIcon>
+                  Documentation
+                </MenuItem>
                 {features.cloud && (
                   <MenuItem
                     onClick={(e) => {

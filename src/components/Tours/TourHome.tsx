@@ -5,91 +5,200 @@ import {
   Fab,
   MenuItem,
   ListItemIcon,
-  Badge
+  Badge,
+  Typography,
+  Paper,
+  Link
 } from '@mui/material'
 import Tour from 'reactour'
 import { InfoRounded, LiveHelp } from '@mui/icons-material'
 import useStore from '../../store/useStore'
+import gif1 from '../../assets/navigation.gif'
+import gif2 from '../../assets/quickaccess.gif'
+// import plusBtnImg from '../../assets/plusBtn.png'
 
 const steps = [
   {
     selector: '.step-zero',
     content: (
-      <div>
-        <h2>LedFx Tour</h2>
-        Welcome to LedFx! Feel free to follow this tour and we&apos;ll show you
-        around 😊
-      </div>
+      <Paper
+        sx={{
+          backgroundColor: '#303032',
+          boxShadow: 'none',
+          backgroundImage: 'none'
+        }}
+      >
+        <Typography variant="h4" sx={{ marginBottom: 1, color: 'white' }}>
+          Welcome!
+        </Typography>
+        <Typography variant="body1" sx={{ color: 'white' }}>
+          Join us on this guided tour to explore LedFx features and
+          functionalities.
+        </Typography>
+      </Paper>
     ),
     style: {
-      backgroundColor: '#303030'
+      backgroundColor: '#303032',
+      borderRadius: 10
     }
   },
   {
     selector: '.step-one',
     content: (
-      <div>
-        <h2>Navigation</h2>
-        Go to different pages from here
-      </div>
+      <Paper
+        sx={{
+          backgroundColor: '#303030',
+          boxShadow: 'none',
+          backgroundImage: 'none'
+        }}
+      >
+        <Typography variant="h4" sx={{ marginBottom: 1, color: 'white' }}>
+          Navigation
+        </Typography>
+        <Typography variant="body1" sx={{ color: 'white' }}>
+          Navigate through pages here.
+          <img
+            src={gif1} // Replace with the actual path or URL
+            alt="GIF"
+            width={290}
+            style={{ paddingTop: '15px' }}
+          />
+        </Typography>
+      </Paper>
     ),
     style: {
-      backgroundColor: '#303030'
+      backgroundColor: '#303030',
+      borderRadius: 10
     }
   },
   {
     selector: '.step-two',
     content: (
-      <div>
-        <h2>Menu</h2>
-        LedFx actions and settings can be found up here
-        <ul style={{ paddingLeft: '1rem' }}>
-          <li>👨‍🏫 You can access a tour for other pages in this menu</li>
-          <li>
-            👀 &apos;Enable Graphs&apos; to see a preview of the device LEDs.
-            Leave it off if your browser struggles with too many pixels!
-          </li>
-        </ul>
-      </div>
+      <Paper
+        sx={{
+          backgroundColor: '#303030',
+          boxShadow: 'none',
+          backgroundImage: 'none'
+        }}
+      >
+        <Typography variant="h4" sx={{ marginBottom: 1, color: 'white' }}>
+          Menu
+        </Typography>
+        <Typography>
+          Access
+          <Link
+            sx={{ textDecoration: 'none' }}
+            href="https://blade.hamza.stream/"
+          >
+            {' '}
+            Tours
+          </Link>
+          , manage{' '}
+          <Link
+            sx={{ textDecoration: 'none' }}
+            href="https://blade.hamza.stream/"
+          >
+            Host
+          </Link>
+          ,{' '}
+          <Link
+            sx={{ textDecoration: 'none' }}
+            href="https://blade.hamza.stream/"
+          >
+            Account
+          </Link>{' '}
+          and{' '}
+          <Link
+            sx={{ textDecoration: 'none' }}
+            href="https://blade.hamza.stream/"
+          >
+            Graph
+          </Link>{' '}
+          settings.
+        </Typography>
+      </Paper>
     ),
     style: {
-      backgroundColor: '#303030'
+      backgroundColor: '#303030',
+      borderRadius: 10
     }
   },
   {
     selector: '.step-three',
     content: (
-      <div>
-        <h2>Devices Quick-Access</h2>
-        Directly jump to a device
-      </div>
+      <Paper
+        sx={{
+          backgroundColor: '#303030',
+          boxShadow: 'none',
+          backgroundImage: 'none'
+        }}
+      >
+        <Typography variant="h5" sx={{ marginBottom: 1, color: 'white' }}>
+          Quick Access
+        </Typography>
+        <Typography variant="body1" sx={{ color: 'white' }}>
+          Select a device to manage its settings and configurations.
+          <img
+            src={gif2} // Replace with the actual path or URL
+            alt="GIF"
+            width={290}
+            style={{ paddingTop: '15px' }}
+          />
+        </Typography>
+      </Paper>
     ),
     style: {
-      backgroundColor: '#303030'
+      backgroundColor: '#303030',
+      borderRadius: 10
     }
   },
   {
     selector: '.step-four',
     content: (
-      <div>
-        <h2>The Big Plus Button</h2>
-        This is where it all begins!
-        <ul style={{ paddingLeft: '1rem' }}>
-          <li>Add Device: Add a networked LED strip</li>
-          <li>
-            Add Virtual: Divide or merge your devices into one virtual strip
-          </li>
-          <li>Add Scene: Save the active effects of all devices</li>
-          <li>
-            Add Integration: Connect LedFx to other software (upcoming...)
-          </li>
-        </ul>
-        I&apos;d recommend you now close this tour and add your first devices to
-        LedFx 🎉
-      </div>
+      <Paper
+        sx={{
+          backgroundColor: '#303030',
+          boxShadow: 'none',
+          backgroundImage: 'none'
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+          Virtuals, Scenes & Devices
+        </Typography>
+        <Typography>Use Plus Button to configure the following:</Typography>
+        <br />
+        <Typography>
+          <strong style={{ fontSize: '18px' }}>Device: </strong>
+          <Link
+            sx={{ textDecoration: 'none' }}
+            href="https://blade.hamza.stream/page1"
+          >
+            Add networked LED strip
+          </Link>
+        </Typography>
+        <Typography>
+          <strong style={{ fontSize: '18px' }}>Virtual: </strong>
+          <Link
+            sx={{ textDecoration: 'none' }}
+            href="https://blade.hamza.stream/page2"
+          >
+            Unify devices as virtual strip
+          </Link>
+        </Typography>
+        <Typography>
+          <strong style={{ fontSize: '18px' }}>Scene: </strong>
+          <Link
+            sx={{ textDecoration: 'none' }}
+            href="https://blade.hamza.stream/"
+          >
+            Save device's active effects
+          </Link>
+        </Typography>
+      </Paper>
     ),
     style: {
-      backgroundColor: '#303030'
+      backgroundColor: '#303030',
+      borderRadius: 10
     }
   }
 ]
