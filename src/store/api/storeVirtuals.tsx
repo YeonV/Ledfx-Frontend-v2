@@ -36,6 +36,34 @@ export interface EffectConfig {
   skip_every?: number
   solid_color?: boolean
   advanced?: boolean
+  beat_frames?: string
+  flip_horizontal?: boolean
+  flip_vertical?: boolean
+  force_aspect?: boolean
+  force_fit?: boolean
+  gif_at?: string
+  ping_pong?: boolean
+  skip_frames?: string
+  strech_hor?: number
+  strech_ver?: number
+  diag?: boolean
+  diag2?: boolean
+  dump?: boolean
+  fake_beat?: boolean
+  rotate?: number
+  test?: string
+  speed_x?: number
+  size_x?: number
+  pulse_period?: number
+  pulse_ratio?: number
+  flash_color?: string
+  capture?: boolean
+  cpu_secs?: number
+  v_density?: number
+  twist?: number
+  radius?: number
+  density?: number
+  lower?: number
 }
 
 export interface Effect {
