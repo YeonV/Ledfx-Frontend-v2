@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import { Add, Cloud, Delete, Sync } from '@mui/icons-material'
 import axios from 'axios'
+// import { diff } from 'deep-object-diff'
 import useStore from '../../store/useStore'
 import Popover from '../../components/Popover/Popover'
 import CloudScreen from './Cloud/Cloud'
@@ -43,6 +44,7 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
   const features = useStore((state) => state.features)
   const getSystemConfig = useStore((state) => state.getSystemConfig)
   const setSystemConfig = useStore((state) => state.setSystemConfig)
+  const getFullConfig = useStore((state) => state.getFullConfig)
 
   const getCloudConfigs = async () => {
     const response = await cloud.get(
@@ -162,7 +164,9 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
 
   const handleAddPreset = () => {
     addPreset(virtual.id, name).then(() => {
-      getPresets(effectType)
+      getPresets(effectType).then(() => {
+        getFullConfig()
+      })
     })
     setName('')
   }
@@ -191,6 +195,11 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
     return (
       list &&
       Object.keys(list).map((preset) => {
+        // if (
+        //   Object.keys(diff(virtual.effect.config, list[preset].config)).length >
+        //   0
+        // )
+        //   console.log(preset, diff(virtual.effect.config, list[preset].config))
         return (
           <Grid item key={preset}>
             {CATEGORY !== 'default_presets' ? (
