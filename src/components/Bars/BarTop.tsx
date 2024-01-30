@@ -24,10 +24,11 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
-  Button
+  Button,
+  useTheme
 } from '@mui/material'
 import { styled } from '@mui/styles'
-import { useTheme } from '@mui/material/styles'
+
 import useStore from '../../store/useStore'
 import { drawerWidth, ios } from '../../utils/helpers'
 import TourDevice from '../Tours/TourDevice'
@@ -150,8 +151,9 @@ const Title = (pathname: string, latestTag: string, virtuals: any) => {
 const TopBar = () => {
   // const classes = useStyles();
   const navigate = useNavigate()
-
   const theme = useTheme()
+
+  const [loggingIn, setLogginIn] = useState(false)
 
   const open = useStore((state) => state.ui.bars && state.ui.bars?.leftBar.open)
   const latestTag = useStore((state) => state.ui.latestTag)
@@ -185,7 +187,7 @@ const TopBar = () => {
   const updateNotificationInterval = useStore(
     (state) => state.updateNotificationInterval
   )
-
+  const isCreator = localStorage.getItem('ledfx-cloud-role') === 'creator'
   const invisible = () => {
     switch (pathname.split('/')[1]) {
       case 'device':
@@ -431,7 +433,7 @@ const TopBar = () => {
                   </ListItemIcon>
                   Change Host
                 </MenuItem>
-                {isCC && (
+                {isCC && isCreator && (
                   <MenuItem onClick={changeHostManager}>
                     <ListItemIcon>
                       <Lan />
@@ -471,13 +473,22 @@ const TopBar = () => {
 
                 {features.cloud && (
                   <MenuItem
-                    onClick={(e) => {
+                    onClick={(e: any) => {
+                      e.preventDefault()
+                      setLogginIn(true)
                       if (isLogged) {
+                        setLogginIn(false)
                         logout(e)
                       } else if (
                         window.location.pathname.includes('hassio_ingress')
                       ) {
                         window.location.href = `https://strapi.yeonv.com/connect/github?callback=${window.location.origin}`
+                      } else if (isElectron()) {
+                        window.open(
+                          'https://strapi.yeonv.com/connect/github?callback=ledfx://auth/github/',
+                          '_blank',
+                          'noopener,noreferrer'
+                        )
                       } else {
                         window.open(
                           `https://strapi.yeonv.com/connect/github?callback=${window.location.origin}`,
@@ -488,7 +499,15 @@ const TopBar = () => {
                     }}
                   >
                     <ListItemIcon>
-                      {isLogged ? <Logout /> : <Login />}
+                      {isLogged ? (
+                        <Logout />
+                      ) : loggingIn ? (
+                        <Box sx={{ display: 'flex', marginLeft: 0.6 }}>
+                          <CircularProgress size="0.9rem" />
+                        </Box>
+                      ) : (
+                        <Login />
+                      )}
                     </ListItemIcon>
                     {isLogged ? 'Logout' : 'Login with Github'}
                   </MenuItem>
