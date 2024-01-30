@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
   appName: 'ledfx',
   webDir: 'build',
   server: {
-    androidScheme: 'https'
+    url: 'http://localhost:8100',
+    cleartext: true,
+    allowNavigation: ['*']
   }
 }
 
