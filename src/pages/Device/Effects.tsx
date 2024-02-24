@@ -20,6 +20,7 @@ import {
   GridOn,
   GridOff
 } from '@mui/icons-material'
+import axios from 'axios'
 import useStore from '../../store/useStore'
 import EffectDropDown from '../../components/SchemaForm/components/DropDown/DropDown.wrapper'
 import BladeEffectSchemaForm from '../../components/SchemaForm/EffectsSchemaForm/EffectSchemaForm'
@@ -77,6 +78,7 @@ const EffectsCard = ({ virtId }: { virtId: string }) => {
   const [fade, setFade] = useState(false)
   const [matrix, setMatrix] = useState(false)
   const getVirtuals = useStore((state) => state.getVirtuals)
+  // const getDevice = useStore((state) => state.getDevice)
   const getSchemas = useStore((state) => state.getSchemas)
   const clearEffect = useStore((state) => state.clearEffect)
   const setEffect = useStore((state) => state.setEffect)
@@ -148,10 +150,38 @@ const EffectsCard = ({ virtId }: { virtId: string }) => {
   useEffect(() => {
     getVirtuals()
     getSchemas()
-    if (graphs) {
-      setPixelGraphs([virtId])
+
+    if (!virtual) {
+      axios
+        // Matt: To Do, change device from string to a variable.
+        .get('http://localhost:8888/api/devices/ledfx-1')
+        .then((deviceDetails) => {
+          if ((deviceDetails.data.icon_name === 'wled') !== undefined) {
+            const ipAddress = deviceDetails.data.ip_address
+            axios
+              .get(`http://${ipAddress}/json/effects`)
+              .then((wledEffectsResponse: { data: any }) => {
+                console.log('WLED Effects:', wledEffectsResponse.data)
+              })
+              .catch((error: any) => {
+                console.error('Error fetching WLED effects:', error)
+              })
+          }
+        })
+
+      if (graphs) {
+        setPixelGraphs([virtId])
+      }
     }
-  }, [graphs, setPixelGraphs, getVirtuals, getSchemas, effectType])
+  }, [
+    graphs,
+    setPixelGraphs,
+    getVirtuals,
+    getSchemas,
+    effectType,
+    virtual,
+    virtId
+  ])
 
   useEffect(() => {
     // if (virtuals && virtual?.effect?.config) {
