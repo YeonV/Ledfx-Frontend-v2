@@ -27,7 +27,6 @@ const fetchWLEDEffects = async (ipAddress: string, setWLEDEffects: any) => {
     const wledEffectsResponse = await axios.get(
       `http://${ipAddress}/json/effects`
     )
-    console.log('WLED Effects:', wledEffectsResponse.data)
     setWLEDEffects(wledEffectsResponse.data || [])
   } catch (error) {
     console.error('Error fetching WLED effects:', error)
@@ -86,7 +85,6 @@ const EffectDropDown = ({
   }, {})
 
   // Include 'WLED' group only if there are WLED effects
-  console.log(wledEffects.length)
   if (wledEffects.length > 0) {
     groups.WLED = wledEffectOptions || []
   }
