@@ -116,6 +116,41 @@ export const log = (...props: any[]) => {
   }
 }
 
+const createLogger = (color: string, methodName: string) => (...props: any[]) => {
+  const message = typeof props[0] === 'string' ? props[0] : methodName;
+  const args = typeof props[0] === 'string' ? props.slice(1) : props;
+  console.log(
+    `%c ${message} `,
+    `padding: 3px 5px; border-radius: 5px; background: #${color}; color: #fff; font-weight: 700; display: inline-block;`,
+    ...args
+  );
+};
+
+export const log2: any = (...props: any[]) => {
+  const message = typeof props[0] === 'string' ? props[0] : 'log';
+  const args = typeof props[0] === 'string' ? props.slice(1) : props;
+  console.log(
+    `%c ${message} `,
+    `padding: 3px 5px; border-radius: 5px; background: #000000; color: #fff; font-weight: 700; display: inline-block;`,
+    ...args
+  );
+};
+
+log2.info = createLogger('0dbedc', 'info');
+log2.success = createLogger('1db954', 'success');
+log2.warning = createLogger('FF7514', 'warning');
+log2.error = createLogger('800000', 'error');
+log.info = createLogger('0dbedc', 'info');
+log.success = createLogger('1db954', 'success');
+log.warning = createLogger('FF7514', 'warning');
+log.error = createLogger('800000', 'error');
+
+
+
+
+
+
+
 export const sleep = (ms: number) => {
   // eslint-disable-next-line no-promise-executor-return
   return new Promise((resolve) => setTimeout(resolve, ms))

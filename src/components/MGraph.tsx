@@ -282,10 +282,10 @@ const MGraph = () => {
         </CardContent>
       </Card>
       <div
-        style={{ maxWidth: 720, width: '100%', height: 500, margin: '3rem' }}
+        style={{ maxWidth: '100vw', width: '100%', height: 500, margin: '3rem' }}
       >
         {data?.chartData && data?.chartOptions && data?.chartData?.labels && (
-          <Line data={data.chartData} options={data.chartOptions} />
+          <Line data={data.chartData} options={data.chartOptions} style={{ width: '90vw'}} />
         )}
       </div>
     </div>

@@ -9,7 +9,6 @@ import {
   DialogContentText,
   DialogTitle,
   Typography,
-  Switch,
   Divider,
   // Box,
 } from '@mui/material';
@@ -19,7 +18,6 @@ import useStore from '../../store/useStore';
 // import Instances from './Instances';
 
 export default function NoHostDialog() {
-  const [instanceVariant, setInstanceVariant] = useState<'buttons' | 'line'>('buttons');
   const dialogOpen = useStore((state) => state.dialogs.nohost?.open || false);
   const edit = useStore((state) => state.dialogs.nohost?.edit || false);
   const setDialogOpen = useStore((state) => state.setDialogOpen);
@@ -134,25 +132,9 @@ export default function NoHostDialog() {
               <Typography variant='caption' sx={{ marginBottom: '1rem' }}>Core Instances</Typography>
               <Divider sx={{ marginBottom: '1rem' }} />
             </div>
-            {/* {instanceVariant === 'line' && <><Box display="flex">
-              <Box sx={{width: '90px', marginRight: '0.5rem'}}>Port</Box>
-              <Box sx={{width: '110px', marginRight: '0.5rem'}}>Status</Box>
-              <Box sx={{width: '110px', marginRight: '0.5rem'}}>Instance</Box>
-              <Box sx={{width: '110px', marginRight: '0.5rem'}}>Config</Box>
-              <Box sx={{flexGrow: 1, marginRight: '0.5rem', textAlign: 'center'}}>Actions</Box>
-            </Box>
-            <Divider sx={{ marginBottom: '1rem' }} />
-            </>} */}
-
-            {/* {Object.keys(coreParams).map((h, i)=><Instances instances={Object.keys(coreParams).map((ho)=>parseInt(coreParams[ho][1], 10) || 8888)} variant={instanceVariant} i={i} instance={h} port={coreParams[h].length > 0 ? coreParams[h][1] : '8888'} key={coreParams[h].length > 0 ? coreParams[h][1] : '8888'} />)}
-            <Instances instances={Object.keys(coreParams).map((ho)=>parseInt(coreParams[ho][1], 10) || 8888)}variant={instanceVariant} instance={false} i={Object.keys(coreParams).length + 1} port={`${parseInt(coreParams[`instance${  Object.keys(coreParams).length }`]?.[1] || '8888', 10) + 1}`} /> */}
           </div>)}
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between'}}>
-          <div>
-            <Switch sx={{ml: 1}} checked={instanceVariant === 'line'} onChange={() => setInstanceVariant(instanceVariant === 'line' ? 'buttons' : 'line')} />
-            <Typography variant='caption' sx={{ marginTop: '1rem' }}>Show as list</Typography>
-          </div>
+        <DialogActions>
           <Button onClick={handleClose} color="primary">
             Cancel
           </Button>

@@ -32,6 +32,8 @@ export default function IntroDialog({ handleScan, scanning, setScanning }: any) 
   const devices = useStore((state) => state.devices)
   const openRgbDevices = useStore((state) => state.openRgbDevices)
   const launchpadDevice = useStore((state) => state.launchpadDevice)
+  const settings = useStore((state) => state.config)
+
   // const virtuals = useStore((state) => state.virtuals)
   const scanForOpenRgbDevices = useStore((state) => state.scanForOpenRgbDevices)
   const scanForLaunchpadDevices = useStore(
@@ -355,6 +357,13 @@ export default function IntroDialog({ handleScan, scanning, setScanning }: any) 
             title="SceneChips (Filter Tags)"
             checked={features.scenechips}
             onChange={() => setFeatures('scenechips', !features.scenechips)}
+            style={{ fontSize: 16, paddingLeft: '0.25rem'}}
+            direct
+          />
+          <SettingsRow
+            title="Send crash reports via Sentry"
+            checked={settings.use_sentry}
+            onChange={() => setSystemConfig({ 'use_sentry': !settings.use_sentry }).then(() => getSystemConfig())}
             style={{ fontSize: 16, paddingLeft: '0.25rem'}}
             direct
           />

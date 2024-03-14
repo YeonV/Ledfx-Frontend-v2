@@ -78,6 +78,7 @@ export interface ISystemConfig {
   configuration_version: string
   scenes: undefined
   scan_on_startup: boolean
+  use_sentry: boolean
 }
 
 const storeConfig = (set: any) => ({

@@ -187,6 +187,18 @@ const GeneralCard = () => {
           }
         />
       </div>
+      <div
+        className={`${classes.settingsRow} step-settings-nine `}
+        style={{ flexBasis: '100%' }}
+      >
+        <label>Support LedFx developers, by sending crash reports</label>
+        <SettingsSwitch
+          checked={settings.use_sentry}
+          onChange={() =>
+            onSystemSettingsChange('use_sentry', !settings.use_sentry)
+          }
+        />
+      </div>
     </div>
   )
 }
