@@ -256,13 +256,6 @@ const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScre
                     </MenuItem>
                     <Divider />
                     <MenuItem onClick={() => {
-                        setShowMidiLogs(!showMidiLogs)
-                        handleClose()
-                    }}>
-                        <ListItemIcon><BugReport /></ListItemIcon>
-                        <ListItemText primary={`${ showMidiLogs ? 'Hide' : 'Show'} MIDI Logs`} />
-                    </MenuItem>
-                    <MenuItem onClick={() => {
                         const m = JSON.parse(JSON.stringify(midiMapping));
                         Object.keys(m).forEach(mappingKey => {
                             const nestedMapping = m[parseInt(mappingKey) as keyof typeof m];
@@ -274,10 +267,19 @@ const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScre
                             });
                         });
                         setMidiMapping(m);
-                        handleClose()
-                    }}>
+                        // Turn off all MIDI LEDs
+                        const output = WebMidi.getOutputByName(midiOutput);
+                        if (output) {
+                            for (let i = 0; i < 128; i++) {
+                                output.sendNoteOff(i, {release: 0});
+                            }
+                        } else {
+                            console.error('MIDI output not found');
+                        }
+                        handleClose();
+                        }}>
                         <ListItemIcon><Delete /></ListItemIcon>
-                        <ListItemText primary="Reset Colors" />
+                        <ListItemText primary="Reset Colors & Turn Off LEDs" />
                     </MenuItem>
                 </Menu>        
             </Stack>
