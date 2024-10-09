@@ -122,7 +122,7 @@ const MIDIListener = () => {
 useEffect(() => {
   const handleMidiInput = (input: Input) => {
     if (!input || input.name !== midiInput) return
-    console.log('Setting up listeners for:', input.name);
+    // console.log('Setting up listeners for:', input.name);
 
     input.removeListener('noteon');
     input.removeListener('noteoff');
