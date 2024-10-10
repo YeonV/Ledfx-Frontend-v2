@@ -163,29 +163,6 @@ useEffect(() => {
         button: -1
       });
     });
-
-    input.addListener('controlchange', (event: any) => {
-      if (event.controller.number === midiEvent.button && midiEvent.name === input.name) return;
-      if (event.value === 1) {
-        setMidiEvent({
-          name: input.name,
-          note: 'CTRL',
-          button: event.controller.number
-        });
-
-        const mapping = getMappingByButtonNumber(event.controller.number);
-        if (mapping?.command !== undefined) {
-          handleButtonPress(mapping.command, mapping.payload);
-        }
-      } else {
-        setMidiEvent({
-          name: '',
-          note: '',
-          button: -1
-        });
-      }
-      });
-
   
       input.addListener('controlchange', (event: any) => {
         if (event.controller.number === midiEvent.button && midiEvent.name === input.name) return
