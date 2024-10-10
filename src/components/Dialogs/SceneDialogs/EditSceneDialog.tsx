@@ -265,6 +265,12 @@ const EditSceneDialog = () => {
       const newBtnNumber = parseInt(midiActivate?.split('buttonNumber: ')[1]);
       if (newBtnNumber > -1) {
         setTimeout(() => {
+          if (!currentBtnNumber) {
+            output.send([0x92, newBtnNumber, 57])
+            if (lastButton.current !== newBtnNumber) {
+              output.send([0x90, lastButton.current, lpType === 'LPS' ? 0x0C : 0])
+            }       
+          }
           if (currentBtnNumber > -1 && newBtnNumber !== currentBtnNumber) {
             output.send([0x92, currentBtnNumber, 99])
             output.send([0x92, newBtnNumber, 57])
@@ -1031,20 +1037,24 @@ const EditSceneDialog = () => {
             const currentBtnNumber = parseInt(scenes[sceneId].scene_midiactivate?.split('buttonNumber: ')[1]);
             const item = parseInt(Object.keys(newMapping[0]).find((k) => newMapping[0][parseInt(k)].buttonNumber === currentBtnNumber) || '');
             
-            if (currentBtnNumber && newBtnNumber && currentBtnNumber !== newBtnNumber) {        
-                if (item) {
-                    newMapping[0][item] = { buttonNumber: currentBtnNumber };
-                    console.log('mapping after', newMapping);
-                    setMidiMapping(newMapping);
-                    setTimeout(() => {
-                      initMidi();
-                    }, 100);
-                }              
-            }
+       
                       
-            return scVirtualsToIgnore.length > 0
+            scVirtualsToIgnore.length > 0
               ? handleAddSceneWithVirtuals()
               : handleAddScene()
+            if (currentBtnNumber && newBtnNumber && currentBtnNumber !== newBtnNumber) {        
+              if (item) {
+                  newMapping[0][item] = { buttonNumber: currentBtnNumber };
+                  setMidiMapping(newMapping)                  
+                  
+              }              
+            }
+            if (features.scenemidi) {
+              setTimeout(() => {
+                getScenes()
+                initMidi()
+              }, 100);
+            }
           }}
         >
           Save
