@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { WebMidi, Input, Output } from 'webmidi'
+import { WebMidi, Input, Output, NoteMessageEvent } from 'webmidi'
 import { MidiDevices } from '../../utils/MidiDevices/MidiDevices'
 import { sendMidiMessageHelper } from '../../utils/MidiDevices/colorHelper'
 import useStore from '../../store/useStore'
@@ -19,6 +19,7 @@ const MIDIListener = () => {
   const midiMapping = useStore((state) => state.midiMapping)
   const blockMidiHandler = useStore((state) => state.blockMidiHandler)
   const midiEvent = useStore((state) => state.midiEvent)
+  const [midiNotes, setMidiNotes] = useState<NoteMessageEvent[]>([])
   const global_brightness = useStore((state) => state.config.global_brightness)
   const glBrightness = useRef(global_brightness)
   const setFeatures = useStore((state) => state.setFeatures)
@@ -35,7 +36,7 @@ const MIDIListener = () => {
   const setMidiOutputs = useStore((state) => state.setMidiOutputs)
   const setMidiInput = useStore((state) => state.setMidiInput)
   const setMidiOutput = useStore((state) => state.setMidiOutput)
-  const setMidiMapping = useStore((state) => state.setMidiMapping)  
+  const setMidiMapping = useStore((state) => state.setMidiMapping) 
 
   const sceneDialogOpen = useStore((state) => state.dialogs.addScene.sceneKey !== '')
   const lp = MidiDevices[midiType][midiModel]
@@ -128,6 +129,7 @@ const MIDIListener = () => {
   useEffect(() => {
     const handleMidiInput = (input: Input) => {
       if (!input || input.name !== midiInput) return
+      // console.log('Setting up listeners for:', input.name);
   
       input.removeListener('noteon')
       input.removeListener('noteoff')
