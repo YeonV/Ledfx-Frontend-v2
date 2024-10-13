@@ -1,34 +1,40 @@
 import Button from '@mui/material/Button'
 import DialogTitle from '@mui/material/DialogTitle'
 import Dialog from '@mui/material/Dialog'
-import { darken, DialogContent, Divider, IconButton, MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
+import { darken, DialogContent, Divider, IconButton, Stack, TextField, Typography } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import LpColorPicker from './LpColorPicker'
 import Assign from '../Gamepad/Assign'
 import useStore from '../../store/useStore'
-import { getColorFromValue } from './lpColors'
 import { Autorenew, Save } from '@mui/icons-material'
+import { MidiDevices } from '../../utils/MidiDevices/MidiDevices'
+import ColorTypePicker from './ColorTypePicker'
 
 const LaunchpadButton = ({
-    buttonNumber,
+    uiButtonNumber,
     active,
     borderless,
     bgColor,
     children,
     hidden,
+    showMidiLogs,
     ...props
 }: {
     hidden?: boolean
-    buttonNumber: number
+    uiButtonNumber: number
     children: React.ReactNode
     active?: boolean
     borderless?: boolean
     bgColor?: string
+    showMidiLogs?: boolean
 }) => {
+  // console.log(bgColor)
   const [open, setOpen] = useState(false)
-  const lpType = useStore((state) => state.lpType)
   const midiMapping = useStore((state) => state.midiMapping)
   const midiEvent = useStore((state) => state.midiEvent)
+  const midiType = useStore((state) => state.midiType)
+  const midiModel = useStore((state) => state.midiModel)
+  const getColorFromValue = useStore((state) => state.getColorFromValue)
   const initMidi = useStore((state) => state.initMidi)
   const setMidiMapping = useStore((state) => state.setMidiMapping)
   const midiSceneInactiveColor = useStore((state) => state.midiColors.sceneInactiveColor)
@@ -51,6 +57,7 @@ const LaunchpadButton = ({
   const scenes = useStore((state) => state.scenes)
   const activateScene = useStore((state) => state.activateScene)
   const captivateScene = useStore((state) => state.captivateScene)
+
   const setSmartBarOpen = useStore(
     (state) => state.ui.bars && state.ui.setSmartBarOpen
   )
@@ -68,11 +75,13 @@ const LaunchpadButton = ({
     setOpen(false)
   }
 
-  const currentMapping = midiMapping[0][buttonNumber] || {};
+  const currentMapping = midiMapping[0][uiButtonNumber] || {};
   
   const [midiButtonNumber, setMidiButtonNumber] = useState(currentMapping.buttonNumber || 0)
   const [midiRecord, setMidiRecord] = useState(false)
-
+  
+  const lp = MidiDevices[midiType][midiModel]
+  const isRgb = 'rgb' in lp.fn
   function handleButtonPress(command: string, payload?: any) {
     if (command === 'scene' && payload?.scene) {
       setScene(payload.scene)
@@ -111,6 +120,19 @@ const LaunchpadButton = ({
       setFeatures('frequencies', !useStore.getState().features.frequencies)
     }
   }
+
+  const handleColorSelect = (type: string, color: string | number) => {
+    setMidiMapping({
+      ...midiMapping,
+      0: {
+        ...midiMapping[0],
+        [uiButtonNumber]: {
+          ...currentMapping,
+          [type]: color,
+        },
+      },
+    });
+  };
 
   useEffect(() => {
     if (midiRecord && midiEvent.button > -1) {
@@ -154,13 +176,13 @@ const LaunchpadButton = ({
             width: 400
           }
         }}>
-        <DialogTitle>Edit Launchpad Button {buttonNumber}</DialogTitle>
+        <DialogTitle>Edit Launchpad Button {uiButtonNumber}</DialogTitle>
         <DialogContent>
             <Stack direction={'row'} spacing={2} justifyContent={'space-between'} alignItems={'center'}>
                 <Typography>MIDI Button</Typography>
                 <Stack direction={'row'}>
                     <IconButton onClick={() => {
-                        setMidiMapping({...midiMapping, 0: {...midiMapping[0], [buttonNumber]: {...currentMapping, buttonNumber: midiButtonNumber}}})
+                        setMidiMapping({...midiMapping, 0: {...midiMapping[0], [uiButtonNumber]: {...currentMapping, buttonNumber: midiButtonNumber}}})
                         setMidiRecord(!midiRecord)
                     }}>{midiRecord ? <Save /> : <Autorenew />}</IconButton>
                     <TextField disabled value={midiButtonNumber} sx={{ width: 70 }} size='small' />
@@ -173,56 +195,60 @@ const LaunchpadButton = ({
                 mapping={midiMapping}
                 setMapping={setMidiMapping}
                 pressed={false}
-                index={`${buttonNumber}`}
-                key={`${buttonNumber}`}
+                index={`${uiButtonNumber}`}
+                key={`${uiButtonNumber}`}
             />
             <Divider sx={{ mb: 2.5, mt: 1.5}} />
             <Stack direction={'column'} spacing={1} mt={1}>
-                <Typography variant='h6'>Button Color</Typography>
-                {currentMapping.command === 'scene' ? <>
+              <Typography variant='h6'>Button Color</Typography>
+              {currentMapping.command === 'scene' ? (
+                <>
+                  <Stack direction={'row'} spacing={2} justifyContent={'space-between'} alignItems={'center'}>
+                    <Typography>Scene inactive</Typography>
                     <Stack direction={'row'} spacing={2} justifyContent={'space-between'} alignItems={'center'}>
-                        <Typography>Scene inactive</Typography>
-                        <Stack direction={'row'} spacing={2} justifyContent={'space-between'} alignItems={'center'}>
-                            <Select disableUnderline value={currentMapping.typeSceneInactive || midiSceneInactiveType || '90'} onChange={(e) => {
-                                setMidiMapping({...midiMapping, 0: {...midiMapping[0], [buttonNumber]: {...currentMapping, typeSceneInactive: e.target.value}}})
-                            }}>
-                            <MenuItem value={'90'}>Solid</MenuItem>
-                            <MenuItem value={'91'}>Flash</MenuItem>
-                            <MenuItem value={'92'}>Pulse</MenuItem>
-                            </Select>
-                        <LpColorPicker defaultColor={getColorFromValue((currentMapping.colorSceneInactive || midiSceneInactiveColor), lpType)} onColorSelect={(color: string) => {
-                            setMidiMapping({...midiMapping, 0: {...midiMapping[0], [buttonNumber]: {...currentMapping, colorSceneInactive: color}}})
-                        }} />
-                        </Stack>
+                      <ColorTypePicker
+                        value={currentMapping.typeSceneInactive || midiSceneInactiveType || '90'}
+                        onChange={(e) => handleColorSelect('typeSceneInactive', e.target.value)}
+                        isRgb={isRgb}
+                      />
+                      <LpColorPicker
+                        type={currentMapping.typeSceneInactive || midiSceneInactiveType}
+                        defaultColor={isRgb && (currentMapping.colorSceneInactive || midiSceneInactiveColor).startsWith('rgb') ? currentMapping.colorSceneInactive || midiSceneInactiveColor : getColorFromValue((currentMapping.colorSceneInactive || midiSceneInactiveColor))}
+                        onColorSelect={(color) => handleColorSelect('colorSceneInactive', color)}
+                      />
                     </Stack>
+                  </Stack>
+                  <Stack direction={'row'} spacing={2} justifyContent={'space-between'} alignItems={'center'}>
+                    <Typography>Scene active</Typography>
                     <Stack direction={'row'} spacing={2} justifyContent={'space-between'} alignItems={'center'}>
-                        <Typography>Scene active</Typography>
-                        <Stack direction={'row'} spacing={2} justifyContent={'space-between'} alignItems={'center'}>
-                            <Select disableUnderline value={currentMapping.typeSceneActive || midiSceneActiveType || '90'} onChange={(e) => {
-                                setMidiMapping({...midiMapping, 0: {...midiMapping[0], [buttonNumber]: {...currentMapping, typeSceneActive: e.target.value}}})
-                            }}>
-                            <MenuItem value={'90'}>Solid</MenuItem>
-                            <MenuItem value={'91'}>Flash</MenuItem>
-                            <MenuItem value={'92'}>Pulse</MenuItem>
-                            </Select>
-                        <LpColorPicker defaultColor={getColorFromValue((currentMapping.colorSceneActive || midiSceneActiveColor), lpType)} onColorSelect={(color: string) => {
-                            setMidiMapping({...midiMapping, 0: {...midiMapping[0], [buttonNumber]: {...currentMapping, colorSceneActive: color}}})
-                        }} />
-                        </Stack>
+                      <ColorTypePicker
+                        value={currentMapping.typeSceneActive || midiSceneActiveType || '90'}
+                        onChange={(e) => handleColorSelect('typeSceneActive', e.target.value)}
+                        isRgb={isRgb}
+                      />
+                      <LpColorPicker
+                        type={currentMapping.typeSceneActive || midiSceneActiveType}
+                        defaultColor={isRgb && (currentMapping.colorSceneActive || midiSceneActiveColor).startsWith('rgb') ? currentMapping.colorSceneActive || midiSceneActiveColor : getColorFromValue((currentMapping.colorSceneActive || midiSceneActiveColor))}
+                        onColorSelect={(color) => handleColorSelect('colorSceneActive', color)}
+                      />
                     </Stack>
-                </> :
+                  </Stack>
+                </>
+              ) : (
                 <Stack direction={'row'} spacing={2} justifyContent={'space-between'} alignItems={'center'}>
-                         <Select disableUnderline value={currentMapping.typeCommand || midiCommandType || '90'} onChange={(e) => {
-                            setMidiMapping({...midiMapping, 0: {...midiMapping[0], [buttonNumber]: {...currentMapping, typeCommand: e.target.value}}})
-                        }}>
-                        <MenuItem value={'90'}>Solid</MenuItem>
-                        <MenuItem value={'91'}>Flash</MenuItem>
-                        <MenuItem value={'92'}>Pulse</MenuItem>
-                        </Select>
-                        <LpColorPicker defaultColor={getColorFromValue((currentMapping.colorCommand || midiCommandColor), lpType)} onColorSelect={(color: string) => {
-                            setMidiMapping({...midiMapping, 0: {...midiMapping[0], [buttonNumber]: {...currentMapping, colorCommand: color}}})
-                        }} />
-                </Stack>}
+                  <ColorTypePicker
+                    value={currentMapping.typeCommand || midiCommandType || '90'}
+                    onChange={(e) => handleColorSelect('typeCommand', e.target.value)}
+                    isRgb={isRgb}
+                  />
+                  <LpColorPicker
+                    type={currentMapping.typeCommand || midiCommandType}
+                    midiButtonNumber={midiButtonNumber}
+                    defaultColor={isRgb && (currentMapping.colorCommand || midiCommandColor).startsWith('rgb') ? currentMapping.colorCommand || midiCommandColor : getColorFromValue((currentMapping.colorCommand || midiCommandColor))}
+                    onColorSelect={(color) => handleColorSelect('colorCommand', color)}
+                  />
+                </Stack>
+              )}
             </Stack>
             <Stack direction={'row'} justifyContent={'flex-end'} spacing={1} mt={5}>
                 <Button onClick={() => handleClose()}>

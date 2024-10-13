@@ -1,54 +1,55 @@
 import { useEffect, useRef, useState } from 'react'
 import { WebMidi, Input, Output, NoteMessageEvent } from 'webmidi'
+import { MidiDevices } from '../../utils/MidiDevices/MidiDevices'
+import { sendMidiMessageHelper } from '../../utils/MidiDevices/colorHelper'
 import useStore from '../../store/useStore'
-import { getUiBtnNo } from '../../store/ui/storeMidi'
 
 const MIDIListener = () => {
-  const setFeatures = useStore((state) => state.setFeatures)
-  const togglePause = useStore((state) => state.togglePause)
-  const midiInitialized = useStore((state) => state.midiInitialized)
-  const setSystemConfig = useStore((state) => state.setSystemConfig)
-  const setSystemSetting = (setting: string, value: any) => {
-    setSystemConfig({ [setting]: value })
-  }
-  const oneShotAll = useStore((state) => state.oneShotAll)
-  const toggleScenePLplay = useStore((state) => state.toggleScenePLplay)
   const [bright, setBright] = useState(1)
+  const midiInitialized = useStore((state) => state.midiInitialized)
   const scenes = useStore((state) => state.scenes)
   const midiSceneInactiveColor = useStore((state) => state.midiColors.sceneInactiveColor)
   const midiSceneActiveColor = useStore((state) => state.midiColors.sceneActiveColor)
   const commandColor = useStore((state) => state.midiColors.commandColor)
-  const activateScene = useStore((state) => state.activateScene)
-  const captivateScene = useStore((state) => state.captivateScene)
-  const setSmartBarOpen = useStore(
-    (state) => state.ui.bars && state.ui.setSmartBarOpen
-  )
-  const setScene = (e: string) => {
-    activateScene(e)
-    if (scenes[e]?.scene_puturl && scenes[e]?.scene_payload)
-      captivateScene(scenes[e]?.scene_puturl, scenes[e]?.scene_payload)
-  }
-  const setMidiEvent = useStore((state) => state.setMidiEvent)
-  const setMidiInputs = useStore((state) => state.setMidiInputs)
-  const setMidiOutputs = useStore((state) => state.setMidiOutputs)
-  const setMidiInput = useStore((state) => state.setMidiInput)
-  const setMidiOutput = useStore((state) => state.setMidiOutput)
+  const midiType = useStore((state) => state.midiType)
+  const midiModel = useStore((state) => state.midiModel)
   const recentScenes = useStore((state) => state.recentScenes)
   const midiInput = useStore((state) => state.midiInput)
   const midiOutput = useStore((state) => state.midiOutput)
   const midiMapping = useStore((state) => state.midiMapping)
   const blockMidiHandler = useStore((state) => state.blockMidiHandler)
   const midiEvent = useStore((state) => state.midiEvent)
-  const lpType = useStore((state) => state.lpType)
+  const [midiNotes, setMidiNotes] = useState<NoteMessageEvent[]>([])
   const global_brightness = useStore((state) => state.config.global_brightness)
   const glBrightness = useRef(global_brightness)
-  const [midiNotes, setMidiNotes] = useState<NoteMessageEvent[]>([])
+  const setFeatures = useStore((state) => state.setFeatures)
+  const togglePause = useStore((state) => state.togglePause)
+  const getUiBtnNo = useStore((state) => state.getUiBtnNo)
+  const setSystemConfig = useStore((state) => state.setSystemConfig)
+  const oneShotAll = useStore((state) => state.oneShotAll)
+  const toggleScenePLplay = useStore((state) => state.toggleScenePLplay)
+  const activateScene = useStore((state) => state.activateScene)
+  const captivateScene = useStore((state) => state.captivateScene)
+  const setSmartBarOpen = useStore((state) => state.ui.bars && state.ui.setSmartBarOpen)
+  const setMidiEvent = useStore((state) => state.setMidiEvent)
+  const setMidiInputs = useStore((state) => state.setMidiInputs)
+  const setMidiOutputs = useStore((state) => state.setMidiOutputs)
+  const setMidiInput = useStore((state) => state.setMidiInput)
+  const setMidiOutput = useStore((state) => state.setMidiOutput)
+  const setMidiMapping = useStore((state) => state.setMidiMapping) 
 
-  const setMidiMapping = useStore((state) => state.setMidiMapping)
+  const sceneDialogOpen = useStore((state) => state.dialogs.addScene.sceneKey !== '')
+  const lp = MidiDevices[midiType][midiModel]
+  const fn = lp.fn
+  
+  const setSystemSetting = (setting: string, value: any) => { setSystemConfig({ [setting]: value }) }
 
-  const sceneDialogOpen = useStore(
-    (state) => state.dialogs.addScene.sceneKey !== ''
-  )
+  const setScene = (e: string) => {
+    activateScene(e)
+    if (scenes[e]?.scene_puturl && scenes[e]?.scene_payload)
+      captivateScene(scenes[e]?.scene_puturl, scenes[e]?.scene_payload)
+  }
+  
 
   function handleButtonPress(command: string, payload?: any) {
     if (blockMidiHandler) return
@@ -95,98 +96,104 @@ const MIDIListener = () => {
   }
 
   const initLeds = (output: Output) => {
-    if (output)  {
-      Object.entries(midiMapping[0]).forEach(([key, value]) => {
-        const buttonNumber = value.buttonNumber
-        if (value.command !== 'scene' && value.command && value.command !== 'none' && buttonNumber !== -1) {
-          if (output && buttonNumber !== -1) {
-            try {
-              output.send([parseInt(`0x${value.typeCommand}`) || 0x90, buttonNumber, parseInt(value.colorCommand || commandColor, 16) || 99])
-            } catch (error) {
-              console.error('Error sending MIDI message:', error)
-            }
-          }
-        } else if (value.command === 'scene') {
-          if (output && buttonNumber !== -1) {
-            try {
-              output.send([parseInt(`0x${value.typeSceneInactive}`) || 0x90, buttonNumber, parseInt(value.payload?.scene === recentScenes[0] ? (value.colorSceneActive || midiSceneActiveColor) : (value.colorSceneInactive || midiSceneInactiveColor), 16) || 60])
-            } catch (error) {
-              console.error('Error sending MIDI message:', error)
-            }
-          }
-        }
-      })
-    }
-  }
+    if (!output) return
   
-useEffect(() => {
-  const handleMidiInput = (input: Input) => {
-    if (!input || input.name !== midiInput) return
-    // console.log('Setting up listeners for:', input.name);
-
-    input.removeListener('noteon');
-    input.removeListener('noteoff');
-    input.removeListener('controlchange');
-
-    input.addListener('noteon', (event: NoteMessageEvent) => {
-      // console.log('MIDI NoteOn received:', event);
-      setMidiNotes(prevNotes => [...prevNotes, event]);
-
-      if (!event.note || (midiEvent.button === event.note.number && midiEvent.name === input.name && midiEvent.note === event.note.identifier)) return;
-
+    Object.entries(midiMapping[0]).forEach(([key, value]) => {
+      const buttonNumber = value.buttonNumber
+      if (buttonNumber === -1) return
+  
+      const sendMidiMessage = (color: string, typeCommand: string) => {
+        // console.log(1,'color',color, typeCommand, lp.globalColors.commandType)
+        sendMidiMessageHelper(fn, output, buttonNumber, color, typeCommand, false)
+      }
+  
+      try {
+        if (value.command !== 'scene' && value.command && value.command !== 'none') {
+          const color = value.colorCommand || commandColor
+          // console.log(1,'color',color, value.typeCommand, lp.globalColors.commandType)
+          sendMidiMessage(color, color.startsWith('rgb') ? 'rgb': value.typeCommand || lp.globalColors.commandType)
+        } else if (value.command === 'scene') {
+          const colorActive = value.colorSceneActive || midiSceneActiveColor
+          const colorInactive = value.colorSceneInactive || midiSceneInactiveColor
+          const isActiveScene = value.payload?.scene === recentScenes
+          const color = isActiveScene ? colorActive : colorInactive
+          const typeCommand = isActiveScene ? value.typeSceneActive : value.typeSceneInactive
+          sendMidiMessage(color, typeCommand || lp.globalColors.commandType)
+        }
+      } catch (error) {
+        console.error('Error sending MIDI message:', error)
+      }
+    })
+  }  
+  
+  useEffect(() => {
+    const handleMidiInput = (input: Input) => {
+      if (!input || input.name !== midiInput) return
+      // console.log('Setting up listeners for:', input.name);
+  
+      input.removeListener('noteon')
+      input.removeListener('noteoff')
+      input.removeListener('controlchange')
+  
+      input.addListener('noteon', (event: any) => handleNoteOn(event, input))
+      input.addListener('noteoff', (event: any) => handleNoteOff(event, input))
+      input.addListener('controlchange', (event: any) => handleControlChange(event, input))
+    }
+  
+    const handleNoteOn = (event: any, input: Input) => {
+      if (!event.note || (midiEvent.button === event.note.number && midiEvent.name === input.name && midiEvent.note === event.note.identifier)) return
+  
       setMidiEvent({
         name: input.name,
         note: event.note.identifier,
         button: event.note.number
-      });
-
-      const mapping = getMappingByButtonNumber(event.note.number);
+      })
+  
+      const mapping = getMappingByButtonNumber(event.note.number)
       if (mapping?.command !== undefined) {
-        handleButtonPress(mapping.command, mapping.payload);
+        handleButtonPress(mapping.command, mapping.payload)
       }
-    });
-
-    input.addListener('noteoff', (event: NoteMessageEvent) => {
-      const mapping = getMappingByButtonNumber(event.note.number);
+    }
+  
+    const handleNoteOff = (event: any, input: Input) => {
+      const mapping = getMappingByButtonNumber(event.note.number)
       if (mapping?.command === 'one-shot' && mapping?.payload?.holdType === 'release') {
         oneShotAll(
           mapping.payload?.color || '#0dbedc',
           mapping.payload?.ramp || 10,
           1,
           mapping.payload?.fade || 220
-        );
+        )
       }
-      if (midiInput !== input.name) return;
+      if (midiInput !== input.name) return
       setMidiEvent({
         name: '',
         note: '',
         button: -1
-      });
-    });
-  
-      input.addListener('controlchange', (event: any) => {
-        if (event.controller.number === midiEvent.button && midiEvent.name === input.name) return
-        if (event.value === 1) {
-          setMidiEvent({
-            name: input.name,
-            note: 'CTRL',
-            button: event.controller.number
-          })
-  
-          const mapping = getMappingByButtonNumber(event.controller.number)
-          if (mapping?.command !== undefined) {
-            handleButtonPress(mapping.command, mapping.payload)
-          }
-        } else {
-          setMidiEvent({
-            name: '',
-            note: '',
-            button: -1
-          })
-        }
       })
     }
- 
+  
+    const handleControlChange = (event: any, input: Input) => {
+      if (event.controller.number === midiEvent.button && midiEvent.name === input.name) return
+      if (event.value === 1) {
+        setMidiEvent({
+          name: input.name,
+          note: 'CTRL',
+          button: event.controller.number
+        })
+  
+        const mapping = getMappingByButtonNumber(event.controller.number)
+        if (mapping?.command !== undefined) {
+          handleButtonPress(mapping.command, mapping.payload)
+        }
+      } else {
+        setMidiEvent({
+          name: '',
+          note: '',
+          button: -1
+        })
+      }
+    }
   
     const enableWebMidi = () => {
       WebMidi.enable({
@@ -202,13 +209,14 @@ useEffect(() => {
             if (midiInput === '') setMidiInput(inputs[inputs.length - 1]?.name)
             if (midiOutput === '') setMidiOutput(outputs[inputs.length - 1]?.name)
             const output = outputs[inputs.length - 1]
-    
+            const lp = MidiDevices[midiType][midiModel].fn
+  
             Object.entries(midiMapping[0]).forEach(([key, value]) => {
               const buttonNumber = value.buttonNumber
               if (!value.command || value.command === 'none' || buttonNumber === -1) {
                 if (output && buttonNumber !== -1) {
                   try {
-                    output.send([0x90, buttonNumber, lpType === 'LPX' ? 0x00 : 0x0C])
+                    output.send(lp.ledOff(buttonNumber))
                   } catch (error) {
                     console.error('Error sending MIDI message:', error)
                   }
@@ -216,48 +224,33 @@ useEffect(() => {
                 return
               }
             })
-    
+  
             if (inputs.length > 0) {
               inputs.forEach((input) => {
                 handleMidiInput(input)
               })
             }
-      
+  
             initLeds(output)
           }
         }
       })
     }
-    
-    enableWebMidi()   
-
-
+  
     const handleWebsockets = (event: any) => {
       const output = WebMidi.getOutputByName(midiOutput)
-      // if (output) initLeds(output)
       try {
         if (event.type === 'scene_activated') {
           const { scene_id } = event.detail
           Object.keys(scenes).forEach((key) => {
             const scene = scenes[key]
             const buttonNumber = parseInt(scene.scene_midiactivate.split('buttonNumber: ')[1], 10)
+            const uiButtonNumber = getUiBtnNo(buttonNumber)
+            const value = uiButtonNumber && midiMapping[0][uiButtonNumber]
             if (key === scene_id) {
-              if (output && buttonNumber !== -1) {
-                if (!Number.isNaN(buttonNumber)) {
-                  // console.log('Scene Active:', key, buttonNumber)
-                  output.send([parseInt(`0x${midiMapping[0][lpType !== 'LPX' ? (getUiBtnNo(buttonNumber) || -1) : buttonNumber]?.typeSceneActive}`) || 0x90, buttonNumber, parseInt(midiMapping[0][lpType !== 'LPX' ? (getUiBtnNo(buttonNumber) || -1) : buttonNumber]?.colorSceneActive || midiSceneActiveColor || '1E', 16)])
-                }
-              } else {
-                console.error('No MIDI output devices found')
-              }
+              sendSceneMidiMessage(output, buttonNumber, value, true)
             } else {
-              if (output && buttonNumber !== -1) {
-                if (!Number.isNaN(buttonNumber)) {
-                  output.send([parseInt(`0x${midiMapping[0][lpType !== 'LPX' ? (getUiBtnNo(buttonNumber) || -1) : buttonNumber]?.typeSceneInactive}`) || 0x90, buttonNumber, parseInt(midiMapping[0][lpType !== 'LPX' ? (getUiBtnNo(buttonNumber) || -1) : buttonNumber]?.colorSceneInactive || midiSceneInactiveColor || '3C', 16)])
-                }
-              } else {
-                console.error('No MIDI output devices found')
-              }
+              sendSceneMidiMessage(output, buttonNumber, value, false)
             }
           })
         }
@@ -265,14 +258,22 @@ useEffect(() => {
         console.error('Error parsing websocket message:', error)
       }
     }
-    
+  
+    const sendSceneMidiMessage = (output: any, buttonNumber: number, value: any, isActive: boolean) => {
+      const color = isActive ? (value.colorSceneActive || midiSceneActiveColor || lp.globalColors.sceneActiveColor) : (value.colorSceneInactive || midiSceneInactiveColor || lp.globalColors.sceneInactiveColor)
+      const typeCommand = isActive ? (value.typeSceneActive || lp.globalColors.sceneActiveType) : (value.typeSceneInactive || lp.globalColors.sceneInactiveType)
+      sendMidiMessageHelper(fn, output, buttonNumber, color, typeCommand, isActive)
+    }      
+  
+    enableWebMidi()
     document.addEventListener('scene_activated', handleWebsockets)
+  
     return () => {
       document.removeEventListener('scene_activated', handleWebsockets)
     }
-    
+  
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenes, sceneDialogOpen, midiInitialized])
+  }, [scenes, sceneDialogOpen, midiInitialized])  
 
 
   // init midiMapping from scenes
@@ -281,12 +282,8 @@ useEffect(() => {
     Object.keys(scenes).forEach((key) => {
       const scene = scenes[key]
       if (!scene.scene_midiactivate) return
-      const buttonNumber = parseInt(
-        scene.scene_midiactivate.split('buttonNumber: ')[1],
-        10
-      )
-      const uiButtonNumber = lpType === 'LPX' ? buttonNumber : getUiBtnNo(buttonNumber) || -1
-      // console.log('Button Number:', buttonNumber) 
+      const buttonNumber = parseInt(scene.scene_midiactivate.split('buttonNumber: ')[1], 10)
+      const uiButtonNumber = getUiBtnNo(buttonNumber) || -1
       mapping[0] = {
         ...mapping[0],
         [uiButtonNumber]: {

@@ -1,15 +1,16 @@
 import { ArrowForwardIos,  BrightnessHigh, Collections, Pause, PlayArrow, ViewSidebar, Menu as MenuIcon, Save, Delete, DeleteForever, Visibility, Autorenew, Fullscreen, FullscreenExit, BugReport, Send } from '@mui/icons-material'
-import { Box, Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem, Select, SelectChangeEvent, Stack, TextField, Typography, useTheme } from '@mui/material'
+import { Box, Button, Divider, ListItemIcon, ListItemText, ListSubheader, Menu, MenuItem, Select, SelectChangeEvent, Stack, TextField, Tooltip, Typography, useTheme } from '@mui/material'
 import BladeIcon from '../Icons/BladeIcon/BladeIcon'
 import useStore from '../../store/useStore'
 import Assign from '../Gamepad/Assign'
 import { useEffect, useRef, useState } from 'react'
 import { WebMidi } from 'webmidi'
 import LaunchpadButton from './LaunchpadButton'
-import { getColorFromValue } from './lpColors'
-import { defaultMapping, IMapping, Launchpad, LpMapping } from '../../store/ui/storeMidi'
+import { defaultMapping, IMapping } from '../../store/ui/storeMidi'
 import LaunchpadColors from './LaunchpadColors'
 import { download } from '../../utils/helpers'
+import { Launchpad, MidiDevices } from '../../utils/MidiDevices/MidiDevices'
+import LaunchpadSettings from './LaunchpadSettings'
 
 const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScreen}:{toggleSidebar: () => void, sideBarOpen: boolean, fullScreen?: boolean, setFullScreen: (f:boolean) => void}) => {
     const theme = useTheme()
@@ -25,9 +26,12 @@ const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScre
     const [showMidiLogs, setShowMidiLogs] = useState(false)
     const [showMapping, setShowMapping] = useState(false)
     const setMidiMappingButtonNumbers = useStore((state) => state.setMidiMappingButtonNumbers)
+    const getColorFromValue = useStore((state) => state.getColorFromValue)
     const initMidi = useStore((state) => state.initMidi)
-    const lpType = useStore((state) => state.lpType)
-    const setLpType = useStore((state) => state.setLpType)
+    const setMidiType = useStore((state) => state.setMidiType)
+    const setMidiModel = useStore((state) => state.setMidiModel)
+    const midiModel = useStore((state) => state.midiModel)
+    const midiType = useStore((state) => state.midiType)
     const midiEvent = useStore((state) => state.midiEvent)
     const midiOutput = useStore((state) => state.midiOutput)
     const recentScenes = useStore((state) => state.recentScenes)
@@ -36,11 +40,27 @@ const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScre
     const setMidiSceneActiveColor = useStore((state) => state.setMidiSceneActiveColor)
     const setMidiSceneInactiveColor = useStore((state) => state.setMidiSceneInactiveColor)
     const setMidiCommandColor = useStore((state) => state.setMidiCommandColor)
+    const midiSceneActiveColor = useStore((state) => state.midiColors.sceneActiveColor)
+    const midiSceneInactiveColor = useStore((state) => state.midiColors.sceneInactiveColor)
+    const midiCommandColor = useStore((state) => state.midiColors.commandColor)
+    const setMidiSceneActiveType = useStore((state) => state.setMidiSceneActiveType)
+    const setMidiSceneInactiveType = useStore((state) => state.setMidiSceneInactiveType)
+    const setMidiCommandType = useStore((state) => state.setMidiCommandType)
     const pressedButtonColor = useStore((state) => state.midiColors.pressedButtonColor)
+    const integrations = useStore((state) => state.integrations)
+    const currentTrack = useStore((state) => state.spotify.currentTrack)
+    const spAuthenticated = useStore((state) => state.spotify.spAuthenticated)
+    const sendSpotifyTrack = useStore((state) => state.spotify.sendSpotifyTrack)
+    const setSendSpotifyTrack = useStore((state) => state.setSendSpotifyTrack)
     const paused = useStore((state) => state.paused)
     const matrix = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => 0))
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+    const lp= MidiDevices[midiType][midiModel]
+    const isRgb = 'rgb' in lp.fn && lp.fn.rgb
+    
+    const output = midiOutput !== '' ? WebMidi.getOutputByName(midiOutput) : WebMidi.outputs[1]
+
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       setAnchorEl(event.currentTarget);
     }
@@ -142,6 +162,13 @@ const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScre
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [midiEvent])
 
+    useEffect(() => {
+        if (sendSpotifyTrack && currentTrack !== '' && 'text' in lp.fn && lp.fn.text) {
+            output.send(lp.fn.text(currentTrack, 128, 0, 0, false, 10));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentTrack, sendSpotifyTrack])
+    
   return (
     <>
         <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} mb={fullScreen ? '5px' : 2}>
@@ -152,6 +179,9 @@ const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScre
                 </Stack>
             </Stack>
             <Stack direction={'row'} alignItems={'center'} spacing={0}> 
+                {integrations.spotify?.active && spAuthenticated && 'text' in lp.fn && <Tooltip title='Automagically show artist & title on spotify song change'>
+                    <Button onClick={() => setSendSpotifyTrack(!sendSpotifyTrack)}><BladeIcon name='mdi:spotify' sx={{ color: sendSpotifyTrack ? theme.palette.primary.main : 'GrayText'}} /></Button>
+                </Tooltip>}
                 <Button onClick={() => initMidi()}><Autorenew /></Button>
                 <Button
                     id="basic-button"
@@ -256,28 +286,39 @@ const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScre
                         <ListItemText primary="Reset Colors" />
                     </MenuItem>
                     <Divider />
-                    <MenuItem onClick={() => {
-                        setMidiMappingButtonNumbers(LpMapping.LaunchpadX)
-                        setLpType('LPX')
-                        setMidiSceneActiveColor('1E')
-                        setMidiSceneInactiveColor('3C')
-                        setMidiCommandColor('63')
-                        initMidi()
-                    }}>
-                        <ListItemIcon><BladeIcon name='launchpad' /></ListItemIcon>
-                        <ListItemText primary="Launchpad X" />
+                    <MenuItem sx={{ position: 'absolute', pointerEvents: 'none' }}>
+                        <ListItemIcon><BladeIcon name={midiType === 'Launchpad' ? 'launchpad' : 'midi'} /></ListItemIcon>
+                        <ListItemText primary={midiType + ' ' + midiModel} />
                     </MenuItem>
-                    <MenuItem onClick={() => {
-                        setMidiMappingButtonNumbers(LpMapping.LaunchpadS)
-                        setLpType('LPS')
-                        setMidiSceneActiveColor('3C')
-                        setMidiSceneInactiveColor('0F')
-                        setMidiCommandColor('3E')
-                        initMidi()
-                    }}>
-                        <ListItemIcon><BladeIcon name='launchpad' /></ListItemIcon>
-                        <ListItemText primary="Launchpad S" />
-                    </MenuItem>
+                    <Stack sx={{ pl: 2, pr: 1, mb:1 }}>
+                        <Select fullWidth disableUnderline defaultValue={'Preconfigured'}>
+                            {Object.keys(MidiDevices).map((mType) =>
+                                <>
+                                    <ListSubheader>{mType}</ListSubheader>
+                                    {Object.keys(MidiDevices[mType as keyof typeof MidiDevices]).map((model) => 
+                                        <MenuItem key={model} 
+                                            onClick={() => {
+                                                const lp = MidiDevices[mType as keyof typeof MidiDevices][model as keyof typeof MidiDevices[keyof typeof MidiDevices]]
+                                                setMidiMappingButtonNumbers(lp.buttonNumbers)
+                                                setMidiType(mType as keyof typeof MidiDevices)
+                                                setMidiModel(model as keyof typeof MidiDevices[keyof typeof MidiDevices])
+                                                setMidiSceneActiveColor(lp.globalColors.sceneActiveColor)
+                                                setMidiSceneInactiveColor(lp.globalColors.sceneInactiveColor)
+                                                setMidiCommandColor(lp.globalColors.commandColor)
+                                                setMidiSceneActiveType(lp.globalColors.sceneActiveType)
+                                                setMidiSceneInactiveType(lp.globalColors.sceneInactiveType)
+                                                setMidiCommandType(lp.globalColors.commandType)
+                                                initMidi()
+                                            }} 
+                                            value={model}>
+                                                {model}
+                                        </MenuItem>
+                                    )}
+                                </>
+                            )}
+                        </Select>
+                    </Stack>
+                    {localStorage.getItem('ledfx-cloud-role') === 'creator' && <LaunchpadSettings onClick={()=>{}} />}
                     <Divider />
                     <MenuItem onClick={() => {
                         setShowMidiLogs(!showMidiLogs)
@@ -324,32 +365,36 @@ const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScre
                         {row.map((_button, buttonIndex) => {
                         const row = 9 - rowIndex
                         const column = buttonIndex + 1
-                        const buttonNumber = `${row}${column}`
-                        const btnNumberInt = parseInt(buttonNumber)
-                        const btn = midiMapping[0][btnNumberInt]
+                        const uiButtonNumber = `${row}${column}`
+                        const uiBtnNumberInt = parseInt(uiButtonNumber)
+                        const btn = midiMapping[0][uiBtnNumberInt]
+                        const buttonNumber = btn?.buttonNumber
 
-                        // Use the buttonNumber from the mapping for functional logic
-                        const functionalButtonNumber = btn?.buttonNumber
-                        const bgColor = functionalButtonNumber === -1 ? '#000' : (midiEvent.button === functionalButtonNumber)
+                        const sceneActiveColor = btn?.colorSceneActive || midiSceneActiveColor || lp.globalColors.sceneActiveColor
+                        const sceneInactiveColor = btn?.colorSceneInactive || midiSceneInactiveColor || lp.globalColors.sceneInactiveColor
+                        const commandColor = btn?.colorCommand || midiCommandColor || lp.globalColors.commandColor
+                        const command = btn?.command
+                        const sceneActive = btn?.payload?.scene === recentScenes[0]
+
+                        const clr = (color: string) => isRgb && color.startsWith('rgb') ? color : getColorFromValue(color) || '#000'                        
+
+                        const bgColor = buttonNumber === -1 ? '#000' : (midiEvent.button === buttonNumber)
                             ? ( pressedButtonColor || theme.palette.primary.main )
-                            : btn?.command && 
-                            btn?.command === 'scene' &&
-                            btn?.payload?.scene === recentScenes[0]
-                            ? getColorFromValue((btn?.colorSceneActive || '1E'), lpType) || '#0f0'
-                            : btn?.command && 
-                                btn?.command === 'scene' 
-                                ? getColorFromValue((btn?.colorSceneInactive || '07'), lpType) || '#f00'
-                                : btn?.command && 
-                                btn?.command !== 'none'  && rowIndex !== 0
-                                ? getColorFromValue((btn?.colorCommand || '63'), lpType) || '#ff0'
-                                : rowIndex === 0 || buttonIndex === 8
-                                    ? '#000' 
-                                    : '#ccc'
+                            : command && command === 'scene' && sceneActive
+                                ? clr(sceneActiveColor)
+                                : command && command === 'scene' 
+                                    ? clr(sceneInactiveColor)
+                                    : command && command !== 'none'  && rowIndex !== 0
+                                        ? clr(commandColor)
+                                        : rowIndex === 0 || buttonIndex === 8
+                                            ? '#000' 
+                                            : '#ccc'
 
                         return (
                             <LaunchpadButton
-                                hidden={functionalButtonNumber === -1}
-                                buttonNumber={btnNumberInt}
+                                showMidiLogs={showMidiLogs}
+                                hidden={buttonNumber === -1}
+                                uiButtonNumber={uiBtnNumberInt}
                                 active={!!(rowIndex === 0 && btn?.command && btn?.command !== 'none')}
                                 bgColor={bgColor}
                                 key={'button' + buttonIndex}
@@ -400,15 +445,22 @@ const LaunchpadButtonMap = ({toggleSidebar, sideBarOpen, fullScreen, setFullScre
                     {Object.keys(Launchpad.X.command).length && <Select variant='outlined' size='small' sx={{ width: 200 }} onChange={(e: SelectChangeEvent) => {
                         setMidiMessageToSend(Launchpad.X.command[e.target.value as keyof typeof Launchpad.X.command].map((v: any) => `0x${v.toString(16)}`).join(', '))
                     }}>
+                    <MenuItem key={'none'} value={''}>{''}</MenuItem>
                     {Object.entries(Launchpad.X.command).map(([key, value]) => <MenuItem key={key} value={key}>{key}</MenuItem>)}
                     </Select>}
                     <TextField label='Send raw MIDI message' variant='outlined' size='small' fullWidth value={midiMessageToSend} onChange={(e) => setMidiMessageToSend(e.target.value)} />
-                    <Button onClick={()=>{
-                        const output = midiOutput !== '' ? WebMidi.getOutputByName(midiOutput) : WebMidi.outputs[1]
-                        if (!output) return
-                        console.log(midiMessageToSend)
-                        output.send(midiMessageToSend.replaceAll(', ',' ').split(' ').map((v: any) => parseInt(v)) || [])
-                    }}>
+                    <Button 
+                        onClick={()=>{
+                            const output = midiOutput !== '' ? WebMidi.getOutputByName(midiOutput) : WebMidi.outputs[1]
+                            if (!output) return
+                            output.send(midiMessageToSend.replaceAll(', ',' ').split(' ').map((v: any) => parseInt(v)) || [])
+                        }}
+                        onContextMenu={() => {
+                            const output = midiOutput !== '' ? WebMidi.getOutputByName(midiOutput) : WebMidi.outputs[1]
+                            if (!output) return
+                            if ('text' in lp.fn && lp.fn.text) output.send(lp.fn.text('Hacked by Blade!', 128, 0, 0))
+                        }}
+                    >
                         <Send />
                     </Button>
                 </Stack>
