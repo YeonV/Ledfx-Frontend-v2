@@ -1,7 +1,3 @@
-/* eslint-disable consistent-return */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable guard-for-in */
-/* eslint-disable no-unused-expressions */
 import { useState, useEffect } from 'react'
 import {
   Dialog,
@@ -61,9 +57,9 @@ const AddVirtualDialog = () => {
     const defaultModel = {} as any
 
     for (const key in currentSchema.properties) {
-      currentSchema.properties[key].default !== undefined
-        ? (defaultModel[key] = currentSchema.properties[key].default)
-        : undefined
+      if (currentSchema.properties[key].default !== undefined) {
+        defaultModel[key] = currentSchema.properties[key].default
+      }
     }
 
     const valid = currentSchema.required.every((val: string) =>
@@ -116,7 +112,8 @@ const AddVirtualDialog = () => {
 
   useEffect(() => {
     handleModelChange(initial.config)
-  }, [virtId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [virtId, JSON.stringify(initial.config)])
 
   return (
     <>

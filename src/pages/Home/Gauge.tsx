@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { useTheme } from '@mui/material/styles'
 import { Box, CircularProgress, Typography, useMediaQuery } from '@mui/material'
 
@@ -8,13 +7,7 @@ export default function Gauge(props: any) {
   const xSmallHeight = useMediaQuery('(max-height: 730px)')
   const smallHeight = useMediaQuery('(max-height: 800px)')
   const mediumHeight = useMediaQuery('(max-height: 900px)')
-  const size = xSmallHeight
-    ? 6
-    : smallHeight
-      ? 8
-      : mediumHeight
-        ? 10
-        :12
+  const size = xSmallHeight ? 6 : smallHeight ? 8 : mediumHeight ? 10 : 12
 
   return (
     <Box
@@ -54,16 +47,16 @@ export default function Gauge(props: any) {
       >
         <Typography
           variant="h2"
-          color="secondary"
-          fontSize={`${size/4}em`}
+          color="primary"
+          fontSize={`${size / 4}em`}
           style={{ lineHeight: 1 }}
         >
           {current}
         </Typography>
         <Typography
           variant="caption"
-          color="secondary"
-          fontSize={`${size/12}em`}
+          color="GrayText"
+          fontSize={`${size / 12}em`}
           style={{ lineHeight: 1 }}
         >
           {unit}

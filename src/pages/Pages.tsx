@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-no-useless-fragment */
 import {
   HashRouter as Router,
   BrowserRouter,
@@ -32,6 +31,7 @@ import Lock from './Lock'
 import Mp from '../components/Integrations/Spotify/Widgets/Mp/Mp'
 import FrontendPixelsTooSmall from '../components/Dialogs/FrontendPixelsTooSmall'
 import HostManager from '../components/Dialogs/HostManager'
+import Graph from './Graph/Graph'
 
 const Routings = ({ handleWs }: any) => {
   const theme = useTheme()
@@ -61,7 +61,7 @@ const Routings = ({ handleWs }: any) => {
     window.location.reload()
   })
   if (isElect) {
-    useHotkeys(['ctrl+alt+l'], () => {
+    useHotkeys(['ctrl+alt+l'], () => { // eslint-disable-line
       window.localStorage.setItem('lock', 'activated')
       window.location.reload()
     })
@@ -120,6 +120,7 @@ const Routings = ({ handleWs }: any) => {
               <Route path="/" element={<Home />} />
               <Route path="/devices" element={<Devices />} />
               <Route path="/device/:virtId" element={<Device />} />
+              <Route path="/graph/:virtId" element={<Graph />} />
               <Route path="/scenes" element={<Scenes />} />
               {!(window.localStorage.getItem('guestmode') === 'activated') && (
                 <Route path="/integrations" element={<Integrations />} />
@@ -131,7 +132,7 @@ const Routings = ({ handleWs }: any) => {
               <Route
                 path="*"
                 element={
-                  // eslint-disable-next-line prettier/prettier
+                  // eslint-disable-next-line
                   !(window.localStorage.getItem('guestmode') === 'activated') ? <Home /> : <Scenes />
                 }
               />

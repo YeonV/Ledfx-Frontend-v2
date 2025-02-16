@@ -40,8 +40,8 @@ const ready = () =>
     require('@electron/remote/main').enable(wind.webContents)
 
     wind.webContents.setWindowOpenHandler(({ url }) => {
-      if (url.includes(' https://accounts.spotify.com/authorize') 
-      // || url.includes('https://strapi.yeonv.com/connect/github?callback')
+      if (url.includes(' https://accounts.spotify.com/authorize')
+      // || url.includes(`${backendUrl}/connect/github?callback`)
       ) {
         shell.openExternal(url)
         // return { action: 'deny' }
@@ -51,14 +51,14 @@ const ready = () =>
 
     if (isCC) startInstance(wind, 'instance1', subprocesses)
     if (isDev) installDevtools(installExtension)
-  
+
     createTray(isCC, wind, thePath, __dirname)
 
     ipcMain.on('toMain', async (event, parameters) =>
       handlers(wind, subprocesses, event, parameters)
     )
     wind.on('close', () => {
-      closeAllSubs(wind, subpy, subprocesses)    
+      closeAllSubs(wind, subpy, subprocesses)
       wind = null;
     })
   })

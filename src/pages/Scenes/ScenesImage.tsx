@@ -5,7 +5,7 @@ import useStore from '../../store/useStore'
 import useStyles from './Scenes.styles'
 import BladeIcon from '../../components/Icons/BladeIcon/BladeIcon'
 
-const SceneImage = ({ iconName }: { iconName: string }) => {
+const SceneImage = ({ iconName, list }: { iconName: string, list?: boolean }) => {
   const classes = useStyles()
   const [imageData, setImageData] = useState(null)
   const getImage = useStore((state) => state.getImage)
@@ -13,7 +13,8 @@ const SceneImage = ({ iconName }: { iconName: string }) => {
     const result = await getImage(
       ic.split('image:')[1]?.replaceAll('file:///', '')
     )
-    setImageData(result.image)
+    if (result?.image) setImageData(result.image)
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useEffect(() => {
     if (iconName?.startsWith('image:')) {
@@ -27,12 +28,14 @@ const SceneImage = ({ iconName }: { iconName: string }) => {
         className={classes.media}
         image={iconName.split('image:')[1]}
         title="Contemplative Reptile"
+        sx={{ width: '100%', height: '100%' }}
       />
     ) : (
       <div
         className={classes.media}
         style={{
           height: 140,
+          width: '100%',
           maxWidth: 'calc(100% - 2px)',
           backgroundSize: 'cover',
           backgroundImage: `url("data:image/png;base64,${imageData}")`
@@ -41,7 +44,7 @@ const SceneImage = ({ iconName }: { iconName: string }) => {
       />
     )
   ) : (
-    <BladeIcon scene className={classes.iconMedia} name={iconName} />
+    <BladeIcon scene className={list ? classes.iconMediaList : classes.iconMedia} name={iconName} list={list} />
   )
 }
 

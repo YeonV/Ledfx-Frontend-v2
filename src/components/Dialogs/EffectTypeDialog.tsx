@@ -63,11 +63,8 @@ const EffectTypeDialog = ({
         )
         : []),
     ],
-    [groups, formats]
-  );
-  const handleFormat = (_: any, newFormats: any) => {
-    setFormats(newFormats);
-  };
+    [groups]
+  )
 
   return (
     <div key="effectTypeSelector">

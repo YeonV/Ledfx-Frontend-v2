@@ -1,6 +1,6 @@
-/* eslint-disable react/destructuring-assignment */
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { compareVersions } from 'compare-versions'
 import {
   Menu as MenuIcon,
   MoreVert,
@@ -25,12 +25,17 @@ import {
   MenuItem,
   ListItemIcon,
   Button,
-  useTheme
+  useTheme,
+  Select,
+  Stack,
+  ListItemText,
+  Divider,
+  Tooltip
 } from '@mui/material'
 import { styled } from '@mui/styles'
 
 import useStore from '../../store/useStore'
-import { drawerWidth, ios } from '../../utils/helpers'
+import { drawerWidth, ios, log } from '../../utils/helpers'
 import TourDevice from '../Tours/TourDevice'
 import TourScenes from '../Tours/TourScenes'
 import TourSettings from '../Tours/TourSettings'
@@ -41,6 +46,9 @@ import GlobalActionBar from '../GlobalActionBar'
 import pkg from '../../../package.json'
 import { Ledfx } from '../../api/ledfx'
 import TourHome from '../Tours/TourHome'
+import { backendUrl } from '../../pages/Device/Cloud/CloudComponents'
+import { ledfxThemes } from '../../themes/AppThemes'
+import { useWakeLock } from 'react-screen-wake-lock';
 
 export const StyledBadge = styled(Badge)(() => ({
   '& .MuiBadge-badge': {
@@ -63,6 +71,7 @@ const LeftButtons = (
 
   if (
     (pathname.split('/').length === 3 && pathname.split('/')[1] === 'device') ||
+    (pathname.split('/').length === 3 && pathname.split('/')[1] === 'graph') ||
     pathname === '/Settings'
   ) {
     if (ios) {
@@ -79,6 +88,7 @@ const LeftButtons = (
         color="inherit"
         startIcon={<ChevronLeft />}
         onClick={() => history(-1)}
+        sx={{ mt: .9 }}
       >
         Back
       </Button>
@@ -115,18 +125,36 @@ const LeftButtons = (
   return null
 }
 
-const Title = (pathname: string, latestTag: string, virtuals: any) => {
+const Title = (
+  pathname: string,
+  latestTag: string,
+  updateAvailable: boolean,
+  virtuals: any,
+  frConfig: Record<string, any>
+) => {
+  const t = window.localStorage.getItem('ledfx-theme')
+  const newVerOnline =
+  latestTag.replace('v', '').includes('-b')
+      ? compareVersions(
+            latestTag.replace('v', '').split('-b')[1],
+            pkg.version.split('-b')[1]
+        ) === 1
+      : compareVersions(latestTag.replace('v', ''), pkg.version) === 1;
   if (pathname === '/') {
     return (
-      <>
-        {`LedFx v${pkg.version}`}
-        {latestTag !== `v${pkg.version}` ? (
+      <Stack direction={'row'}>
+        <Tooltip title={`LedFx v${pkg.version}`} placement="bottom">
+          <Typography variant="h6" noWrap>
+            LedFx
+          </Typography>
+        </Tooltip>
+        {!process.env.MS_STORE && newVerOnline && frConfig.updateUrl && frConfig.releaseUrl ? (
           <Button
-            color="error"
+            color={t && ['DarkWhite', 'LightBlack'].includes(t) ? "primary" : "error"}
             variant="contained"
             onClick={() =>
               window.open(
-                'https://github.com/YeonV/LedFx-Builds/releases/latest'
+                frConfig.releaseUrl
               )
             }
             sx={{ ml: 2 }}
@@ -134,7 +162,19 @@ const Title = (pathname: string, latestTag: string, virtuals: any) => {
             New Update
           </Button>
         ) : null}
-      </>
+        {!process.env.MS_STORE && updateAvailable ? (
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() =>
+              window.open('https://github.com/LedFx/LedFx/releases/latest')
+            }
+            sx={{ ml: 2 }}
+          >
+            New Core Update
+          </Button>
+        ) : null}
+        </Stack>
     )
   }
   if (pathname.split('/').length === 3 && pathname.split('/')[1] === 'device') {
@@ -149,24 +189,28 @@ const Title = (pathname: string, latestTag: string, virtuals: any) => {
 }
 
 const TopBar = () => {
-  // const classes = useStyles();
+  // const classes = useStyles()
   const navigate = useNavigate()
   const theme = useTheme()
+  const [updateAvailable, setUpdateAvailable] = useState(false)
 
   const [loggingIn, setLogginIn] = useState(false)
 
   const open = useStore((state) => state.ui.bars && state.ui.bars?.leftBar.open)
+  const [frConfig, setFrConfig] = useState({ updateUrl: '' })
   const latestTag = useStore((state) => state.ui.latestTag)
+  const currentTheme = useStore((state) => state.ui.currentTheme)
+  const setCurrentTheme = useStore((state) => state.ui.setCurrentTheme)
   const setLatestTag = useStore((state) => state.ui.setLatestTag)
   const setLeftBarOpen = useStore((state) => state.ui.setLeftBarOpen)
-  // const darkMode = useStore((state) => state.ui.darkMode);
-  // const setDarkMode = useStore((state) => state.ui.setDarkMode);
+  // const darkMode = useStore((state) => state.ui.darkMode)
+  // const setDarkMode = useStore((state) => state.ui.setDarkMode)
   const virtuals = useStore((state) => state.virtuals)
   const setDialogOpen = useStore((state) => state.setDialogOpen)
   const setHostManager = useStore((state) => state.setHostManager)
   const toggleGraphs = useStore((state) => state.toggleGraphs)
   const graphs = useStore((state) => state.graphs)
-  // const config = useStore((state) => state.config);
+  // const config = useStore((state) => state.config)
   const isLogged = useStore((state) => state.isLogged)
   const setIsLogged = useStore((state) => state.setIsLogged)
   const disconnected = useStore((state) => state.disconnected)
@@ -184,9 +228,12 @@ const TopBar = () => {
   const invScenes = useStore((state) => state.tours.scenes)
   const coreParams = useStore((state) => state.coreParams)
   const isCC = coreParams && Object.keys(coreParams).length > 0
-  const updateNotificationInterval = useStore(
-    (state) => state.updateNotificationInterval
-  )
+  const updateNotificationInterval = useStore((state) => state.updateNotificationInterval)
+  const { isSupported, request, release } = useWakeLock({
+    onRequest: () => log('successWakeLock on'),
+    onError: () => log('WakeLock error'),
+    onRelease: () => log('successWakeLock off'),
+  });
   const isCreator = localStorage.getItem('ledfx-cloud-role') === 'creator'
   const invisible = () => {
     switch (pathname.split('/')[1]) {
@@ -217,8 +264,8 @@ const TopBar = () => {
     setAnchorEl(null)
   }
   // const toggleDarkMode = () => {
-  //   setDarkMode(!darkMode);
-  // };
+  //   setDarkMode(!darkMode)
+  // }
 
   const changeGraphs = () => {
     toggleGraphs()
@@ -236,40 +283,65 @@ const TopBar = () => {
     localStorage.removeItem('ledfx-cloud-role')
     setIsLogged(false)
   }
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const res = await fetch('/frontend_config.json')
+      const configData = await res.json()
+      setFrConfig(configData)
+    }
+
+    fetchConfig()
+  }, [])
 
   useEffect(() => {
     setIsLogged(!!localStorage.getItem('jwt'))
-  }, [pathname])
+  }, [pathname, setIsLogged])
+
+  const getUpdateInfo = useStore((state) => state.getUpdateInfo)
 
   useEffect(() => {
-    if (latestTag !== `v${pkg.version}`) {
+    const checkForUpdates = async () => {
+      const updateInfo = await getUpdateInfo(false)
       if (
-        Date.now() -
-          parseInt(
-            window.localStorage.getItem('last-update-notification') || '0',
-            10
-          ) >
-        updateNotificationInterval * 1000 * 60
+        updateInfo?.status === 'success' &&
+        updateInfo?.payload?.type === 'warning'
       ) {
-        Ledfx('/api/notify', 'PUT', {
-          title: 'Update available',
-          text: 'A new version of LedFx has been released'
-        })
-        window.localStorage.setItem('last-update-notification', `${Date.now()}`)
+        setUpdateAvailable(true)
+        if (
+          compareVersions(latestTag.replace('v', ''), pkg.version) === 1 &&
+          Date.now() -
+            parseInt(
+              window.localStorage.getItem('last-update-notification') || '0',
+              10
+            ) >
+            updateNotificationInterval * 1000 * 60
+        ) {
+          Ledfx('/api/notify', 'PUT', {
+            title: 'Update available',
+            text: 'A new version of LedFx has been released'
+          })
+          window.localStorage.setItem(
+            'last-update-notification',
+            `${Date.now()}`
+          )
+        }
       }
     }
-  }, [updateNotificationInterval])
+
+    checkForUpdates()
+  }, [updateNotificationInterval, getUpdateInfo, latestTag])
 
   useEffect(() => {
-    const latest = async () => {
-      const res = await fetch(
-        'https://api.github.com/repos/YeonV/LedFx-Builds/releases/latest'
-      )
-      const resp = await res.json()
-      return resp.tag_name as string
+    if (frConfig.updateUrl) {
+      const latest = async () => {
+        const res = await fetch(frConfig.updateUrl);
+        const resp = await res.json();
+        return resp.tag_name as string;
+      };
+      latest().then((r) => r !== latestTag && setLatestTag(r));
     }
-    latest().then((r) => r !== latestTag && setLatestTag(r))
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frConfig]);
 
   useEffect(() => {
     const handleDisconnect = (e: any) => {
@@ -289,8 +361,30 @@ const TopBar = () => {
     return () => {
       document.removeEventListener('disconnected', handleDisconnect)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    const t = window.localStorage.getItem('ledfx-theme')
+    if (t && t !== currentTheme) {
+      setCurrentTheme(t)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!isSupported) return
+
+    if (features.wakelock) {
+      request()
+    } else {
+      release()
+    }
+    return () => {
+      release()
+    }
+  }, [features.wakelock])
+  
   return (
     <>
       {isElectron() && platform !== 'darwin' && (
@@ -335,8 +429,9 @@ const TopBar = () => {
             <div style={{ position: 'absolute', top: 0, left: 16 }}>
               {LeftButtons(pathname, history, open, handleLeftBarOpen)}
             </div>
+            
             <Typography variant="h6" noWrap style={{ margin: '0 auto' }}>
-              {Title(pathname, latestTag, virtuals)}
+              {Title(pathname, latestTag, updateAvailable, virtuals, frConfig)}
             </Typography>
             <div
               style={{
@@ -482,16 +577,16 @@ const TopBar = () => {
                       } else if (
                         window.location.pathname.includes('hassio_ingress')
                       ) {
-                        window.location.href = `https://strapi.yeonv.com/connect/github?callback=${window.location.origin}`
+                        window.location.href = `${backendUrl}/connect/github?callback=${window.location.origin}`
                       } else if (isElectron()) {
                         window.open(
-                          'https://strapi.yeonv.com/connect/github?callback=ledfx://auth/github/',
+                          `${backendUrl}/connect/github?callback=ledfx://auth/github/`,
                           '_blank',
                           'noopener,noreferrer'
                         )
                       } else {
                         window.open(
-                          `https://strapi.yeonv.com/connect/github?callback=${window.location.origin}`,
+                          `${backendUrl}/connect/github?callback=${window.location.origin}`,
                           '_blank',
                           'noopener,noreferrer'
                         )
@@ -512,6 +607,33 @@ const TopBar = () => {
                     {isLogged ? 'Logout' : 'Login with Github'}
                   </MenuItem>
                 )}
+                {localStorage.getItem('username') === 'YeonV' && <Divider />}
+                {localStorage.getItem('username') === 'YeonV' && 
+                    <Select
+                    IconComponent={()=>null}
+                    fullWidth
+                    sx={{ pl: 2}}
+                      disableUnderline
+                      value={currentTheme} onChange={(e) => {
+                        setCurrentTheme(e.target.value)
+                        window.localStorage.setItem('ledfx-theme', e.target.value)
+                        window.location.reload()
+                      }}
+                    >
+                      {Object.keys(ledfxThemes).map((t) => (
+                        <MenuItem key={t} value={t}>
+                          <Stack direction={'row'}>
+                            <ListItemIcon sx={{ alignItems: 'center',  minWidth: 38}}>
+                              <BladeIcon name={t.startsWith('Dark') ? 'DarkMode' : 'LightMode'} />
+                            </ListItemIcon>
+                            <ListItemText>
+                            {t}
+                            </ListItemText>
+                          </Stack>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  }
               </Menu>
             )}
           </Toolbar>

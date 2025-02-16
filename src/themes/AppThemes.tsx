@@ -1,11 +1,7 @@
-/* eslint-disable prettier/prettier */
 import { PaletteMode } from '@mui/material'
 import { createTheme, Theme } from '@mui/material/styles'
 import isElectron from 'is-electron'
 
-declare module '@mui/styles' {
-  type DefaultTheme = Theme
-}
 declare module '@mui/material/styles' {
   interface Palette {
     accent: Palette['primary']
@@ -24,8 +20,15 @@ export const common = {
   components: {
     MuiButton: {
       defaultProps: {
-        // eslint-disable-next-line prettier/prettier
-        color: 'inherit' as 'error' | 'success' | 'warning' | 'info' | 'inherit' | 'primary' | 'secondary' | undefined,
+        color: 'inherit' as
+          | 'error'
+          | 'success'
+          | 'warning'
+          | 'info'
+          | 'inherit'
+          | 'primary'
+          | 'secondary'
+          | undefined,
         variant: 'outlined' as 'contained' | 'outlined' | 'text' | undefined,
         size: 'small' as 'small' | 'medium' | 'large'
       },
@@ -85,10 +88,42 @@ export const BladeDarkGreenTheme = {
       main: '#2BDE6A'
     },
     secondary: {
-      main: '#1db94'
+      main: '#1db94d'
     },
     accent: {
       main: '#20173c'
+    }
+  }
+}
+export const BladeDarkWhiteTheme = {
+  palette: {
+    mode: 'dark' as PaletteMode | undefined,
+    primary: {
+      main: '#FFFFFF'
+    },
+    secondary: {
+      main: '#000000'
+    },
+    accent: {
+      main: '#000000'
+    },
+    background: {
+      default: '#000',
+      paper: '#090909'
+    }
+  }
+}
+export const BladeLightBlackTheme = {
+  palette: {
+    mode: 'light' as PaletteMode | undefined,
+    primary: {
+      main: '#000000'
+    },
+    secondary: {
+      main: '#FFFFFF'
+    },
+    accent: {
+      main: '#FFFFFF'
     }
   }
 }
@@ -240,18 +275,18 @@ export const ledfxThemes = {
   DarkGreen: BladeDarkGreenTheme,
   DarkBlue: BladeDarkBlueTheme,
   DarkGrey: BladeDarkGreyTheme,
-  DarkPink: BladeDarkPinkTheme
+  DarkPink: BladeDarkPinkTheme,
+  DarkWhite: BladeDarkWhiteTheme,
+  LightBlack: BladeLightBlackTheme
 } as any
 
-/* eslint-disable @typescript-eslint/indent */
 export const ledfxTheme =
   (window.localStorage.getItem('ledfx-theme')
     ? window.localStorage.getItem('ledfx-theme')
     : window.localStorage.getItem('hassTokens')
-    ? 'DarkBlue'
-    : window.location.origin === 'https://my.ledfx.app'
-    ? 'DarkGreen'
-    : isElectron()
-    ? 'DarkOrange'
-    : 'DarkBlue') || 'DarkBlue'
-/* eslint-enable @typescript-eslint/indent */
+      ? 'DarkBlue'
+      : window.location.origin === 'https://my.ledfx.app'
+        ? 'DarkGreen'
+        : isElectron()
+          ? 'DarkOrange'
+          : 'DarkBlue') || 'DarkBlue'

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/indent */
-/* eslint-disable no-console */
 import { createContext, useEffect, useMemo, useState } from 'react'
 
 import { SpotifyState } from '../../../store/ui/SpotifyState'
@@ -15,12 +13,12 @@ import { SpState } from '../../../store/ui/SpState'
 export interface ControlSpotify {
   togglePlay: () => void
   stop: () => void
-  // eslint-disable-next-line no-unused-vars
-  setPos: (pos: number) => void
+
+  setPos: (_pos: number) => void
   next: () => void
   prev: () => void
-  // eslint-disable-next-line no-unused-vars
-  setVol: (vol: number) => void
+
+  setVol: (_vol: number) => void
 }
 
 interface SpotifyTrigger {
@@ -137,11 +135,8 @@ const SpotifyProvider = ({ children }: ISpotifyProviderProps) => {
     }
     triggersNew.sort((a, b) => a.position_ms - b.position_ms)
     setCurrentTriggers(triggersNew)
-  }, [
-    spotifyState?.track_window?.current_track?.id,
-    sceneTriggers.length,
-    spState?.item?.id
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spotifyState?.track_window?.current_track?.id,sceneTriggers.length,spState?.item?.id])
 
   useEffect(() => {
     if (
@@ -168,7 +163,9 @@ const SpotifyProvider = ({ children }: ISpotifyProviderProps) => {
     const update = setInterval(updateState, 1000)
 
     return () => clearInterval(update)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player, spotifyState?.paused, integrations])
+
   useEffect(() => {
     if (integrations.spotify?.status === 0 || !integrations.spotify?.active)
       return
@@ -235,6 +232,7 @@ const SpotifyProvider = ({ children }: ISpotifyProviderProps) => {
     if (!spotifyAuthToken && player) {
       setPlayer(undefined)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spotifyAuthToken, integrations.spotify?.active])
 
   if (currentSceneTriggers.length > 0) {

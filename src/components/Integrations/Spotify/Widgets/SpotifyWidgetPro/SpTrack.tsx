@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import { useContext, useEffect } from 'react'
@@ -14,6 +13,7 @@ export default function SpTrack({ className }: any) {
   const spCtx = useContext(SpStateContext)
   const spotifyToken = useStore((state) => state.spotify.spotifyAuthToken)
   const setPlaylist = useStore((state) => state.setPlaylist)
+  const setCurrentTrack = useStore((state) => state.setCurrentTrack)
   const title =
     spotifyCtx?.track_window?.current_track?.name ||
     spCtx?.item?.name ||
@@ -33,12 +33,17 @@ export default function SpTrack({ className }: any) {
         setPlaylist(r.items)
       })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spotifyCtx?.context?.metadata?.uri, spCtx?.context?.uri])
 
   const album =
     spotifyCtx?.track_window?.current_track?.album?.name ||
     spCtx?.item?.album?.name ||
     ''
+
+  setCurrentTrack(`${artist.length > 1
+            ? artist.map((art: any) => art.name).join(',')
+            : artist[0].name} - ${title}`)
   return (
     <Box className={className}>
       <CoverImage className={classes.albumImg}>

@@ -1,6 +1,3 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable react/require-default-props */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import React, { useEffect, useState } from 'react'
 import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
@@ -15,7 +12,8 @@ import {
   Slide,
   IconButton,
   ToggleButtonGroup,
-  ToggleButton
+  ToggleButton,
+  Tooltip
 } from '@mui/material'
 import {
   GridOn,
@@ -33,6 +31,7 @@ import Segment from './Segment'
 import useEditVirtualsStyles from './EditVirtuals.styles'
 import EditMatrix from './EditMatrix/M'
 import BladeIcon from '../../../components/Icons/BladeIcon/BladeIcon'
+import Tour2dVirtual from '../../../components/Tours/Tour2dVirtual'
 
 const Transition = React.forwardRef<unknown, TransitionProps>(
   function Transition(props, ref) {
@@ -68,7 +67,6 @@ export default function EditVirtuals({
   innerKey
 }: any) {
   const [matrix, setMatrix] = useState(false)
-  const features = useStore((state) => state.features)
   const currentVirtual = useStore((state) => state.currentVirtual)
   const setCurrentVirtual = useStore((state) => state.setCurrentVirtual)
   const calibrationMode = useStore((state) => state.calibrationMode)
@@ -115,6 +113,7 @@ export default function EditVirtuals({
     if (currentVirtual && type === 'hidden') {
       setOpen(true)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentVirtual])
 
   useEffect(() => {
@@ -123,6 +122,7 @@ export default function EditVirtuals({
     return () => {
       if (virtual?.id && open) calibrationMode(virtual?.id, 'off')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [virtual?.id, open])
 
   // useEffect(() => {
@@ -135,7 +135,6 @@ export default function EditVirtuals({
   //   window.addEventListener('beforeunload', unloadCallback)
   //   return () => window.removeEventListener('beforeunload', unloadCallback)
   // }, [])
-
   return virtual && virtual.config ? (
     <>
       {type === 'menuItem' ? (
@@ -184,7 +183,7 @@ export default function EditVirtuals({
             >
               back
             </Button>
-            {features.matrix && (
+            {virtual.config.rows > 1 && (
               <ToggleButtonGroup
                 value={matrix}
                 style={{ marginRight: '1rem' }}
@@ -209,22 +208,25 @@ export default function EditVirtuals({
             <Typography variant="h6" className={classes.title}>
               {virtual.config.name}{' '}
             </Typography>
-            <IconButton
-              onClick={() => {
-                calibrationMode(virtual?.id, calib ? 'off' : 'on')
-                if (!calib && virtual.segments[activeSegment])
-                  highlightSegment(
-                    virtual.id,
-                    virtual.segments[activeSegment][0],
-                    virtual.segments[activeSegment][1],
-                    virtual.segments[activeSegment][2],
-                    virtual.segments[activeSegment][3]
-                  )
-                setCalib(!calib)
-              }}
-            >
-              {calib ? <Visibility /> : <VisibilityOff />}
-            </IconButton>
+            <Tour2dVirtual />
+            <Tooltip title="Preview Effect">
+              <IconButton
+                onClick={() => {
+                  calibrationMode(virtual?.id, calib ? 'off' : 'on')
+                  if (!calib && virtual.segments[activeSegment])
+                    highlightSegment(
+                      virtual.id,
+                      virtual.segments[activeSegment][0],
+                      virtual.segments[activeSegment][1],
+                      virtual.segments[activeSegment][2],
+                      virtual.segments[activeSegment][3]
+                    )
+                  setCalib(!calib)
+                }}
+              >
+                {calib ? <Visibility /> : <VisibilityOff />}
+              </IconButton>
+            </Tooltip>
           </Toolbar>
         </AppBar>
         {matrix ? (

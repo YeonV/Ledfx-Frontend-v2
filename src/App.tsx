@@ -4,7 +4,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles'
 import { SnackbarProvider } from 'notistack'
 import isElectron from 'is-electron'
 import { Box, CssBaseline } from '@mui/material'
-import Cookies from 'universal-cookie/es6'
+import Cookies from 'universal-cookie'
 import ws, { WsContext, HandleWs } from './utils/Websocket'
 import useStore from './store/useStore'
 import useWindowDimensions from './utils/useWindowDimension'
@@ -29,7 +29,7 @@ export default function App() {
   const getSchemas = useStore((state) => state.getSchemas)
   const shutdown = useStore((state) => state.shutdown)
   const showSnackbar = useStore((state) => state.ui.showSnackbar)
-  const darkMode = useStore((state) => state.ui.darkMode)
+  // const darkMode = useStore((state) => state.ui.darkMode)
   const setCoreParams = useStore((state) => state.setCoreParams)
   const setCoreStatus = useStore((state) => state.setCoreStatus)
 
@@ -52,7 +52,7 @@ export default function App() {
           //     },
         }
       }),
-    [darkMode]
+    []
   )
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function App() {
 
   useEffect(() => {
     initFrontendConfig()
-    // eslint-disable-next-line no-console
+
     console.info(
       // eslint-disable-next-line no-useless-concat
       '%c Ledfx ' + '%c\n ReactApp by Blade ',
@@ -71,15 +71,14 @@ export default function App() {
       'background: #fff; color: #800000; border-radius: 0 0 5px 5px;padding: 5px 0;'
     )
     if (window.location.pathname.includes('hassio_ingress'))
-      // eslint-disable-next-line no-console
       console.info(
-        // eslint-disable-next-line no-useless-concat
         '%c HomeAssistant detected ',
         'padding: 3px 5px; border-radius: 5px; color: #ffffff; background-color: #038fc7;'
       )
     if (isElectron()) {
       ;(window as any)?.api?.send('toMain', { command: 'get-platform' })
       ;(window as any)?.api?.send('toMain', { command: 'get-core-params' })
+      ;(window as any)?.api?.send('toMain', { command: 'close-others' })
     }
   }, [])
   ;(window as any).api?.receive('fromMain', (parameters: any) => {
@@ -90,7 +89,6 @@ export default function App() {
       setPlatform(parameters[1])
     }
     if (parameters[0] === 'currentdir') {
-      // eslint-disable-next-line no-console
       console.log(parameters[1])
     }
     if (parameters[0] === 'protocol') {
@@ -111,7 +109,7 @@ export default function App() {
     if (parameters === 'clear-frontend') {
       deleteFrontendConfig()
     }
-    if (parameters === 'all-windows') {
+    if (parameters[0] === 'all-windows') {
       // console.log('all-windows', parameters[1])
     }
   })
@@ -120,17 +118,17 @@ export default function App() {
     const handleWebsockets = (e: any) => {
       showSnackbar(e.detail.type, e.detail.message)
     }
-    document.addEventListener('YZNEW', handleWebsockets)
+    document.addEventListener('show_message', handleWebsockets)
     return () => {
-      document.removeEventListener('YZNEW', handleWebsockets)
+      document.removeEventListener('show_message', handleWebsockets)
     }
-  }, [])
+  }, [showSnackbar])
 
   useEffect(() => {
     if (protoCall !== '') {
       // showSnackbar('info', `External call: ${protoCall}`)
       const proto = protoCall.split('/').filter((n) => n)
-      // eslint-disable-next-line no-console
+
       console.table({
         Domain: proto[1],
         Action: proto[2],
@@ -155,7 +153,7 @@ export default function App() {
       }
       setProtoCall('')
     }
-  }, [protoCall, showSnackbar])
+  }, [protoCall, showSnackbar, setProtoCall])
 
   return (
     <ThemeProvider theme={theme}>

@@ -1,5 +1,3 @@
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-plusplus */
 import { useTheme, Stack, Box, Button } from '@mui/material'
 import { useState } from 'react'
 import BladeFrame from '../../components/SchemaForm/components/BladeFrame'
@@ -61,7 +59,7 @@ const DbGlobalActions = () => {
         <DbButton
           onClick={() => togglePause()}
           icon={paused ? 'PlayArrow' : 'PauseOutlined'}
-          text="Play"
+          text={paused ? 'Paused' : 'Playing'}
         />
         <Button
           color="inherit"
@@ -91,7 +89,7 @@ const DbGlobalActions = () => {
               src={fx}
               alt="wled"
               style={{
-                filter: 'invert(1) brightness(2)',
+                filter: theme.palette.mode=== 'dark' ? 'invert(1) brightness(2)' : '',
                 objectFit: 'cover',
                 marginRight: 8,
                 marginLeft: -8
@@ -128,7 +126,9 @@ const DbGlobalActions = () => {
               src={openrgbLogo}
               alt="wled"
               style={{
-                filter: 'grayscale(100%) brightness(0) invert(1) brightness(2)',
+                filter: theme.palette.mode=== 'dark' 
+                  ? 'grayscale(100%) brightness(0) invert(1) brightness(2)'
+                  : 'grayscale(100%) brightness(0) invert(0) brightness(2)',
                 marginRight: 22,
                 marginLeft: 4
               }}

@@ -1,5 +1,4 @@
-/* eslint-disable no-console */
-import Cookies from 'universal-cookie/es6'
+import Cookies from 'universal-cookie'
 import axios from 'axios'
 import isElectron from 'is-electron'
 import qs from 'qs'
@@ -389,7 +388,8 @@ export async function spotifyPlaySong(
       return 'Success'
     }
     return 'Error'
-  } catch (_error) {
+  } catch (error) {
+    console.log(error)
     const { showSnackbar } = useStore.getState().ui
     showSnackbar('error', 'Song is not available')
     return 'Error'

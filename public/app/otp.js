@@ -77,7 +77,7 @@ function generateMfaQr(event, parameters) {
 
   return;
 }
-function handleVerifyOTP(event, parameters) {
+function handleVerifyOTP(wind, event, parameters) {
   const user = store.get('user') || {
     username: 'FreeUser',
     mfaEnabled: false,
@@ -91,7 +91,7 @@ function handleVerifyOTP(event, parameters) {
     user.mfaEnabled = true;
     store.set('user', user);
   }
-  
+
   // console.log('verified_otp:', verified ,user)
   wind.webContents.send('fromMain', ['mfa-verified', verified]);
   return;

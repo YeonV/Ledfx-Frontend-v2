@@ -1,12 +1,18 @@
-/* eslint-disable react/require-default-props */
 import React from 'react'
 
 import axios from 'axios'
 import { Slide, MenuItem } from '@mui/material'
 import { TransitionProps } from '@mui/material/transitions'
 
+export const backendUrl = 'https://strapi.yeonv.com'
+
 export const cloud = axios.create({
-  baseURL: 'https://strapi.yeonv.com'
+  baseURL: backendUrl
+})
+
+cloud.interceptors.request.use((config) => {
+  config.headers.Authorization = `Bearer ${localStorage.getItem('jwt')}`
+  return config
 })
 
 export const Transition = React.forwardRef<unknown, TransitionProps>(

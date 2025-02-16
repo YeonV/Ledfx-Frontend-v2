@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Box from '@mui/material/Box'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import {
   Button,
   Card,
-  CardMedia,
   IconButton,
   TextField,
   Typography,
@@ -16,12 +15,13 @@ import {
   Repeat,
   RepeatOn,
   // Save,
-  Stop
+  Stop,
+  Timer,
+  TimerOff
 } from '@mui/icons-material'
-
-import BladeIcon from '../../components/Icons/BladeIcon/BladeIcon'
 import useStore from '../../store/useStore'
 import ScenesPlaylistMenu from './ScenesPlaylistMenu'
+import SceneImage from './ScenesImage'
 
 export default function ScenesPlaylist({
   scenes,
@@ -30,8 +30,13 @@ export default function ScenesPlaylist({
   db
 }: any) {
   const theme = useTheme()
+  const timer = useRef<NodeJS.Timeout | null>(null);
   const [theScenes, setTheScenes] = useState([])
   const scenePL = useStore((state) => state.scenePL)
+  const scenePLintervals = useStore((state) => state.scenePLintervals)
+  const setScenePLintervals = useStore((state) => state.setScenePLintervals)
+  const sceneUseIntervals = useStore((state) => state.sceneUseIntervals)
+  const toggleSceneUseIntervals = useStore((state) => state.toggleSceneUseIntervals)
   const scenePLplay = useStore((state) => state.scenePLplay)
   const toggleScenePLplay = useStore((state) => state.toggleScenePLplay)
   const scenePLrepeat = useStore((state) => state.scenePLrepeat)
@@ -50,42 +55,43 @@ export default function ScenesPlaylist({
     return setTheScenes(current)
   }, [scenes, scenePL])
 
-  let timer = null as any
-  useEffect(() => {
-    if (scenePLplay && timer === null) {
-      timer = setTimeout(() => {
-        if (scenePL[scenePLactiveIndex + 1])
-          activateScene(scenePL[scenePLactiveIndex + 1])
-        setScenePLactiveIndex(scenePLactiveIndex + 1)
-      }, scenePLinterval * 1000)
-    } else if (timer) {
-      clearTimeout(timer)
-    }
-    return () => clearTimeout(timer)
-  }, [scenePLplay, scenePLactiveIndex])
 
   useEffect(() => {
-    if (scenePLplay && timer && scenePLactiveIndex >= theScenes.length) {
-      if (scenePLrepeat) {
-        activateScene(scenePL[0])
-        setScenePLactiveIndex(0)
-      } else {
-        toggleScenePLplay()
-        setScenePLactiveIndex(-1)
-      }
+  if (scenePLplay) {
+    if (timer.current === null) {
+      timer.current = setTimeout(() => {
+        if (scenePL[scenePLactiveIndex + 1]) {
+          activateScene(scenePL[scenePLactiveIndex + 1]);
+          setScenePLactiveIndex(scenePLactiveIndex + 1);
+        }
+      }, (sceneUseIntervals ? scenePLinterval : (scenePLintervals[scenePLactiveIndex] || 2)) * 1000);
     }
-  }, [scenePLplay, scenePLactiveIndex])
+  } else if (timer.current) {
+    clearTimeout(timer.current);
+    timer.current = null;
+  }
 
-  const sceneImage = (iconName: string, table?: boolean) =>
-    iconName && iconName.startsWith('image:') ? (
-      <CardMedia
-        image={iconName.split('image:')[1]}
-        title="Contemplative Reptile"
-        sx={{ width: '100%', height: '100%' }}
-      />
-    ) : (
-      <BladeIcon scene={!table} name={iconName} />
-    )
+  return () => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [scenePLplay, scenePLactiveIndex, scenePLintervals, scenePLinterval]);
+
+useEffect(() => {
+  if (scenePLplay && scenePLactiveIndex >= theScenes.length) {
+    if (scenePLrepeat) {
+      activateScene(scenePL[0]);
+      setScenePLactiveIndex(0);
+    } else {
+      toggleScenePLplay();
+      setScenePLactiveIndex(-1);
+    }
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [scenePLplay, scenePLactiveIndex]);
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 0 },
@@ -93,8 +99,9 @@ export default function ScenesPlaylist({
       field: 'scene_image',
       headerName: 'Image',
       width: db ? 100 : 150,
-      renderCell: (params: GridRenderCellParams) =>
-        sceneImage(params.value || 'Wallpaper', true)
+      renderCell: (params: GridRenderCellParams) => (
+        <SceneImage iconName={params.value || 'Wallpaper'} list />
+      )
     },
     {
       field: 'name',
@@ -106,7 +113,10 @@ export default function ScenesPlaylist({
           sx={{
             whiteSpace: 'nowrap',
             overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            textOverflow: 'ellipsis',
+            display: 'flex',
+            alignItems: 'center',
+            height: '100%'
           }}
         >
           {params.value}
@@ -114,11 +124,47 @@ export default function ScenesPlaylist({
       )
     },
     {
+      field: 'interval',      
+      headerName: 'Wait',
+      width: db  ? 70 : 0,
+      renderCell: (params: GridRenderCellParams) => (
+        <TextField
+        variant="standard"
+        disabled={sceneUseIntervals}
+        sx={{
+          display: 'flex',
+          width: 70,
+          height: '100%',
+          '& input': {
+            textAlign: 'right',
+            padding: '5px 15px 2px',
+          },
+          '& .MuiInput-underline:before': {
+            display: 'none'
+          },
+          '& .MuiInput-underline:after': {
+            display: 'none'
+          },
+          '& .MuiInput-root': {
+            height: '100%'
+        }
+        }}
+        type="number"
+        value={scenePLintervals[params.id as number]}
+        onChange={(e: any) => {
+          const newIntervals = [...scenePLintervals]
+          newIntervals[params.id as number] = e.target.value
+          setScenePLintervals(newIntervals)}
+        }
+      />
+      )
+    },
+    {
       field: 'scene_id',
       headerName: 'Remove',
-      width: 120,
+      width: 70,
       renderCell: (params: GridRenderCellParams) => {
-        const removeScene2PL = useStore((state) => state.removeScene2PL)
+        const removeScene2PL = useStore((state) => state.removeScene2PL) // eslint-disable-line
         return (
           <Button
             onClick={() => removeScene2PL(params.id as number)}
@@ -192,16 +238,36 @@ export default function ScenesPlaylist({
                 {scenePLrepeat ? <RepeatOn /> : <Repeat />}
               </Button>
             )}
+            {db ? (
+              <IconButton
+                sx={{ mr: 1 }}
+                onClick={() => {
+                  toggleSceneUseIntervals()
+                }}
+              >
+                {sceneUseIntervals ? <Timer /> : <TimerOff />}
+              </IconButton>
+            ) : (
+              <Button
+                sx={{ mr: 1 }}
+                onClick={() => {
+                  toggleSceneUseIntervals()
+                }}
+              >
+                {sceneUseIntervals ? <Timer /> : <TimerOff />}
+              </Button>
+            )}
             {db ? '' : 'sec'}
             <TextField
               variant="standard"
+              disabled={!sceneUseIntervals}
               sx={{
                 width: 70,
-                border: '1px solid',
-                borderColor: theme.palette.divider,
+                // border: '1px solid',
+                // borderColor: theme.palette.divider,
                 marginRight: 1,
                 marginLeft: 1,
-                borderRadius: 1,
+                // borderRadius: 1,
                 '& input': {
                   textAlign: 'right',
                   padding: '5px 0 2px'

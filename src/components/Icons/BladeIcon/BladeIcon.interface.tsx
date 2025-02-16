@@ -1,3 +1,5 @@
+import { SxProps, Theme } from '@mui/material'
+
 export interface BladeIconProps {
   /**
    * flag indicator
@@ -16,6 +18,11 @@ export interface BladeIconProps {
    */
   intro?: boolean
   /**
+   * Icon is rendered in SceneList
+   * examples: `true`, `false`
+   */
+  list?: boolean
+  /**
    * examples: `wled`, `Light`, `mdi:led-strip`
    */
   name?: string
@@ -27,13 +34,9 @@ export interface BladeIconProps {
    * JSX style
    */
   style?: Record<string, unknown>
-}
-
-export const BladeIconDefaultProps = {
-  colorIndicator: false,
-  name: 'MusicNote',
-  className: '',
-  style: {},
-  scene: false,
-  card: false
+  /**
+   * JSX sx
+   * 
+   */
+  sx?: SxProps<Theme>
 }

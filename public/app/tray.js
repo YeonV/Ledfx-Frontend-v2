@@ -1,13 +1,12 @@
 const path = require('path');
-const { Menu, shell, Tray } = require('electron');
+const { app, Menu, shell, Tray } = require('electron');
 const { startCore } = require('./core');
-const { app } = require('electron');
 const isDev = require('electron-is-dev');
 // const { download } = require('electron-dl')
 
 function createMenu(isCC, wind, thePath) {
   let contextMenu;
-  
+
   if (isCC) {
     contextMenu = Menu.buildFromTemplate([
       { label: 'Show', click: () => {
@@ -74,7 +73,7 @@ function createMenu(isCC, wind, thePath) {
       { label: 'Exit', click: () => app.quit() },
     ]);
   }
-  
+
   return contextMenu;
 }
 
@@ -84,7 +83,7 @@ function createTray(isCC, wind, thePath, dir) {
   let tray = new Tray(icon);
 
   let contextMenu = createMenu(isCC, wind, thePath);
-  
+
   tray.setToolTip(`LedFx Client${isDev ? ' DEV' : ''}`);
   tray.setContextMenu(contextMenu);
   tray.setIgnoreDoubleClickEvents(true);

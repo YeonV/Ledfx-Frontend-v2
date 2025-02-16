@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/indent */
 import {
   Repeat,
   RepeatOne,
@@ -163,9 +162,9 @@ export default function SpControls({ className }: any) {
                   disabled
                   disableUnderline
                   defaultValue={
-                    spotifyDevices &&
-                    spotifyDevices.length > 0 &&
-                    spotifyDevices.find((d) => d.is_active)?.id
+                    spotifyDevices && spotifyDevices.length > 0
+                      ? spotifyDevices.find((d) => d.is_active)?.id
+                      : undefined
                   }
                 >
                   {spotifyDevices &&

@@ -1,5 +1,3 @@
-/* eslint-disable consistent-return */
-/* eslint-disable no-restricted-syntax */
 import { useEffect } from 'react'
 import useStore from '../../../../store/useStore'
 import GradientPicker from './GradientPicker'
@@ -48,6 +46,7 @@ const GradientPickerWrapper = ({
 
   useEffect(() => {
     getColors()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

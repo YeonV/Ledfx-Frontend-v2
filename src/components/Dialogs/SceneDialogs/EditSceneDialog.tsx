@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/indent */
-/* eslint-disable react/jsx-no-useless-fragment */
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AppBar,
   Box,
@@ -30,7 +29,6 @@ import {
   Autocomplete
 } from '@mui/material'
 import { Clear, Undo, NavigateBefore, MusicNote } from '@mui/icons-material'
-import { WebMidi, Input, NoteMessageEvent } from 'webmidi'
 import { useDropzone } from 'react-dropzone'
 import isElectron from 'is-electron'
 import { filterKeys, ordered } from '../../../utils/helpers'
@@ -39,6 +37,10 @@ import BladeIcon from '../../Icons/BladeIcon/BladeIcon'
 import TooltipImage from './TooltipImage'
 import TooltipTags from './TooltipTags'
 import TooltipMidi from './TooltipMidi'
+import MidiInputDialog from '../../Midi/MidiInputDialog'
+import { IMapping } from '../../../store/ui/storeMidi'
+import { WebMidi } from 'webmidi'
+import { MidiDevices } from '../../../utils/MidiDevices/MidiDevices'
 
 const EditSceneDialog = () => {
   const theme = useTheme()
@@ -49,18 +51,23 @@ const EditSceneDialog = () => {
   const [payload, setPayload] = useState('')
   const [midiActivate, setMIDIActivate] = useState('')
   const [invalid, setInvalid] = useState(false)
-  const [lp, setLp] = useState(undefined as any)
-  // const [user_presets, setUp] = useState(undefined as any)
+  const [ledfx_presets, setLedFxPresets] = useState({} as any)
+  const [user_presets, setUserPresets] = useState({} as any)
   const [disabledPSelector, setDisabledPSelector] = useState([] as string[])
   const [scVirtualsToIgnore, setScVirtualsToIgnore] = useState<string[]>([])
   const medium = useMediaQuery('(max-width: 920px )')
   const small = useMediaQuery('(max-width: 580px )')
   const xsmall = useMediaQuery('(max-width: 480px )')
+  const midiMapping = useStore((state) => state.midiMapping)
+  const setMidiMapping = useStore((state) => state.setMidiMapping)
+  const initMidi = useStore((state) => state.initMidi)
 
+  
   const { effects } = useStore((state) => state.schemas)
   const scenes = useStore((state) => state.scenes)
   const open = useStore((state) => state.dialogs.addScene?.edit || false)
   const data = useStore((state: any) => state.dialogs.addScene?.editData)
+  const sceneId = useStore((state: any) => state.dialogs.addScene?.sceneKey)
   const features = useStore((state) => state.features)
   const sceneActiveTags = useStore((state) => state.ui.sceneActiveTags)
 
@@ -75,8 +82,14 @@ const EditSceneDialog = () => {
   const getUserPresets = useStore((state) => state.getUserPresets)
   const getImage = useStore((state) => state.getImage)
   const [imageData, setImageData] = useState(null)
+  const midiEvent = useStore((state) => state.midiEvent)
+  const midiOutput = useStore((state) => state.midiOutput)
+  const midiType = useStore((state) => state.midiType)
+  const midiModel = useStore((state) => state.midiModel)
+  const lastButton = useRef(-1)
 
-  // const getFullConfig = useStore((state) => state.getFullConfig)
+  const setBlockMidiHandler = useStore((state) => state.setBlockMidiHandler)
+  const getFullConfig = useStore((state) => state.getFullConfig)
 
   const toggletSceneActiveTag = useStore(
     (state) => state.ui.toggletSceneActiveTag
@@ -86,6 +99,7 @@ const EditSceneDialog = () => {
       ic.split('image:')[1]?.replaceAll('file:///', '')
     )
     setImageData(result.image)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -216,61 +230,96 @@ const EditSceneDialog = () => {
   }
 
   useEffect(() => {
-    // if (open) getFullConfig()
-
-    if (open)
-      getLedFxPresets().then((ledfx_presets) => {
-        setLp(ledfx_presets)
-      })
-    if (open) getUserPresets()
-    // .then((u_presets) => {
-    //     // setUp(u_presets)
-    //   })
-  }, [open])
-  useEffect(() => {
+    getFullConfig()
+    getLedFxPresets().then(setLedFxPresets)
+    getUserPresets().then(setUserPresets)
     if (open) activateScene(data.name?.toLowerCase().replaceAll(' ', '-'))
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   useEffect(() => {
-    if (features.scenemidi) {
-      const handleMidiEvent = (input: Input, event: NoteMessageEvent) => {
+    if (features.scenemidi && midiEvent.button > -1) {
         setMIDIActivate(
-          `${input.name} Note: ${event.note.identifier} buttonNumber: ${event.note.number}`
+          `${midiEvent.name} Note: ${midiEvent.note} buttonNumber: ${midiEvent.button}`
         )
-      }
-      WebMidi.enable({
-        callback(err: Error) {
-          if (err) {
-            // eslint-disable-next-line no-console
-            console.error('WebMidi could not be enabled:', err)
+    }
+  }, [midiEvent, features.scenemidi])
+  
+  useEffect(() => {
+    if (features.scenemidi && open) {
+      initMidi()
+      const output = midiOutput !== '' ? WebMidi.getOutputByName(midiOutput) : WebMidi.outputs[1]
+      const currentBtnNumber = parseInt(scenes[sceneId].scene_midiactivate?.split('buttonNumber: ')[1]);
+      const lp = MidiDevices[midiType][midiModel].fn
+      if (currentBtnNumber > -1) {
+        setTimeout(() => {
+          if ('ledPulse' in lp) {
+            output.send(lp.ledPulse(currentBtnNumber, 99))
           } else {
-            // Get all input devices
-            const { inputs } = WebMidi
-            if (inputs.length > 0) {
-              // Listen for MIDI messages on all channels and all input devices
-              inputs.forEach((input: Input) =>
-                input.addListener('noteon', (event: NoteMessageEvent) => {
-                  handleMidiEvent(input, event)
-                })
-              )
+            output.send(lp.ledOn(currentBtnNumber, 99))
+          }
+        }, 100)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, features.scenemidi])
+  
+  useEffect(() => {
+    if (features.scenemidi && open) {
+      setBlockMidiHandler(true)
+      const output = midiOutput !== '' ? WebMidi.getOutputByName(midiOutput) : WebMidi.outputs[1]
+      const currentBtnNumber = parseInt(scenes[sceneId].scene_midiactivate?.split('buttonNumber: ')[1]);
+      const newBtnNumber = parseInt(midiActivate?.split('buttonNumber: ')[1]);
+      const lp = MidiDevices[midiType][midiModel].fn
+      if (newBtnNumber > -1) {
+        setTimeout(() => {
+          if (!currentBtnNumber) {
+            if ('ledPulse' in lp) {
+              output.send(lp.ledPulse(newBtnNumber, 57))
+            } else {
+              output.send(lp.ledOn(newBtnNumber, 57))
+            }
+            if (lastButton.current !== newBtnNumber) {
+              output.send(lp.ledOff(lastButton.current))
+            }       
+          }
+          if (currentBtnNumber > -1 && newBtnNumber !== currentBtnNumber) {
+            if ('ledPulse' in lp) {
+              output.send(lp.ledPulse(currentBtnNumber, 99))
+              output.send(lp.ledPulse(newBtnNumber, 57))
+            } else {
+              output.send(lp.ledOn(currentBtnNumber, 99))
+              output.send(lp.ledOn(newBtnNumber, 57))
             }
           }
-        }
-      })
+          if (currentBtnNumber > -1 && lastButton.current > -1 && lastButton.current !== newBtnNumber && lastButton.current !== currentBtnNumber) {
+            output.send(lp.ledOff(lastButton.current))
+          }
+          lastButton.current = newBtnNumber
+        }, 100)
+      }
     }
-  }, [])
+    if (!open) {
+      lastButton.current = -1
+      setBlockMidiHandler(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, features.scenemidi, midiEvent])
 
-  const { user_presets } = useStore((state) => state.config)
-
-  const renderPresets = (ledfx_presets: any, dev: string, effectId: string) => {
-    if (ledfx_presets) {
+  const renderPresets = (
+    current_ledfx_presets: any,
+    dev: string,
+    effectId: string
+  ) => {
+    if (current_ledfx_presets || user_presets) {
       const ledfxPreset =
-        ledfx_presets &&
-        Object.keys(ledfx_presets).length > 0 &&
-        Object.keys(ledfx_presets).find(
+        current_ledfx_presets &&
+        Object.keys(current_ledfx_presets).length > 0 &&
+        Object.keys(current_ledfx_presets).find(
           (k) =>
-            JSON.stringify(ordered((ledfx_presets[k] as any).config)) ===
-            JSON.stringify(ordered(sVirtuals[dev].config))
+            JSON.stringify(
+              ordered((current_ledfx_presets[k] as any).config)
+            ) === JSON.stringify(ordered(sVirtuals[dev].config))
         )
       const userPresets =
         user_presets[effectId] &&
@@ -295,7 +344,7 @@ const EditSceneDialog = () => {
         <Select
           defaultValue={ledfxPreset || userPreset}
           onChange={(e) => {
-            let category = 'default_presets'
+            let category = 'ledfx_presets'
             if (
               user_presets &&
               user_presets[effectId] &&
@@ -304,7 +353,7 @@ const EditSceneDialog = () => {
                 e.target.value
               )
             ) {
-              category = 'custom_presets'
+              category = 'user_presets'
             }
 
             return (
@@ -327,9 +376,11 @@ const EditSceneDialog = () => {
               scVirtualsToIgnore.indexOf(dev) > -1 ? 'line-through' : ''
           }}
         >
-          {ledfx_presets && <ListSubheader>LedFx Presets</ListSubheader>}
-          {ledfx_presets &&
-            Object.keys(ledfx_presets)
+          {current_ledfx_presets && (
+            <ListSubheader>LedFx Presets</ListSubheader>
+          )}
+          {current_ledfx_presets &&
+            Object.keys(current_ledfx_presets)
               .sort((k) => (k === 'reset' ? -1 : 1))
               .map((ke, i) => (
                 <MenuItem key={ke + i} value={ke}>
@@ -349,7 +400,7 @@ const EditSceneDialog = () => {
         <Select
           defaultValue="Not saved as Preset"
           onChange={(e) => {
-            let category = 'default_presets'
+            let category = 'ledfx_presets'
             if (
               user_presets &&
               user_presets[effectId] &&
@@ -358,7 +409,7 @@ const EditSceneDialog = () => {
                 e.target.value
               )
             ) {
-              category = 'custom_presets'
+              category = 'user_presets'
             }
 
             return (
@@ -374,9 +425,11 @@ const EditSceneDialog = () => {
           disableUnderline
         >
           <MenuItem value="Not saved as Preset">Not saved as Preset</MenuItem>
-          {ledfx_presets && <ListSubheader>LedFx Presets</ListSubheader>}
-          {ledfx_presets &&
-            Object.keys(ledfx_presets)
+          {current_ledfx_presets && (
+            <ListSubheader>LedFx Presets</ListSubheader>
+          )}
+          {current_ledfx_presets &&
+            Object.keys(current_ledfx_presets)
               .sort((k) => (k === 'reset' ? -1 : 1))
               .map((ke, i) => (
                 <MenuItem key={ke + i} value={ke}>
@@ -431,6 +484,7 @@ const EditSceneDialog = () => {
     >
       <AppBar
         enableColorOnDark
+        color="secondary"
         // className={classes.appBar}
       >
         <Toolbar>
@@ -545,11 +599,11 @@ const EditSceneDialog = () => {
                   label="Image Type"
                   variant="outlined"
                   value={
-                    image.startsWith('image:file:///')
+                    image?.startsWith('image:file:///')
                       ? 'image:file:///'
-                      : image.startsWith('image:https://')
+                      : image?.startsWith('image:https://')
                         ? 'image:https://'
-                        : image.startsWith('mdi:')
+                        : image?.startsWith('mdi:')
                           ? 'mdi:'
                           : ''
                   }
@@ -577,9 +631,9 @@ const EditSceneDialog = () => {
                 }}
                 type="text"
                 value={image
-                  .replace('image:file:///', '')
-                  .replace('image:https://', '')
-                  .replace('mdi:', '')}
+                  ?.replace('image:file:///', '')
+                  ?.replace('image:https://', '')
+                  ?.replace('mdi:', '')}
                 onChange={(e) => setImage(e.target.value)}
                 fullWidth
               />
@@ -662,7 +716,7 @@ const EditSceneDialog = () => {
             ) : (
               <></>
             )}
-            {features && features.scenemidi && WebMidi.inputs.length > 0 ? (
+            {features && features.scenemidi ? (
               <>
                 <Stack direction={small ? 'column' : 'row'} gap={1}>
                   <FormControl sx={{ mt: 1, width: small ? '100%' : '130px' }}>
@@ -768,15 +822,6 @@ const EditSceneDialog = () => {
                                   </Avatar>
                                 }
                               />
-                              {/* <Chip
-                            label={/\((.*?)\)/.exec(midiActivate)?.[1]}
-                            onDelete={() => setMIDIActivate('')}
-                            avatar={
-                              <Avatar>
-                                {/\((.*?)\)/.exec(midiActivate)?.[1]}
-                              </Avatar>
-                            }
-                          /> */}
                               <Chip
                                 label={
                                   midiActivate
@@ -790,7 +835,6 @@ const EditSceneDialog = () => {
                                 }
                               />
                               <Chip
-                                // onDelete={() => setMIDIActivate('')}
                                 label={
                                   midiActivate
                                     ?.split('buttonNumber: ')[1]
@@ -800,9 +844,7 @@ const EditSceneDialog = () => {
                               />
                               <Chip
                                 onDelete={() => setMIDIActivate('')}
-                                label={/\((.*?)\)/
-                                  .exec(midiActivate)?.[1]
-                                  .replace('MIDI', '')}
+                                label={/\((.*?)\)/.exec(midiActivate)?.[1].replace(' MIDI', '').trim()}
                                 icon={<BladeIcon name="mdi:midi" />}
                               />
                             </>
@@ -811,6 +853,9 @@ const EditSceneDialog = () => {
                       )
                     }}
                   />
+                  {/\((.*?)\)/.exec(midiActivate)?.[1].replace(' MIDI', '').trim() === 'LPX' && (
+                      <MidiInputDialog />
+                  )}
                 </Stack>
               </>
             ) : (
@@ -943,9 +988,9 @@ const EditSceneDialog = () => {
                     dev
                   )}
                   <span style={{ width: 180, textAlign: 'right' }}>
-                    {lp &&
+                    {ledfx_presets &&
                       renderPresets(
-                        lp[
+                        ledfx_presets[
                           scenes[data.name?.toLowerCase().replaceAll(' ', '-')]
                             .virtuals[dev].type
                         ],
@@ -1002,11 +1047,32 @@ const EditSceneDialog = () => {
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
         <Button
-          onClick={() =>
+          onClick={() => {
+            const deepCopy = (obj: any) =>  JSON.parse(JSON.stringify(obj))  
+            const newMapping = deepCopy(midiMapping) as IMapping;
+            const newBtnNumber = parseInt(midiActivate?.split('buttonNumber: ')[1]);
+            const currentBtnNumber = parseInt(scenes[sceneId].scene_midiactivate?.split('buttonNumber: ')[1]);
+            const item = parseInt(Object.keys(newMapping[0]).find((k) => newMapping[0][parseInt(k)].buttonNumber === currentBtnNumber) || '');
+            
+       
+                      
             scVirtualsToIgnore.length > 0
               ? handleAddSceneWithVirtuals()
               : handleAddScene()
-          }
+            if (currentBtnNumber && newBtnNumber && currentBtnNumber !== newBtnNumber) {        
+              if (item) {
+                  newMapping[0][item] = { buttonNumber: currentBtnNumber };
+                  setMidiMapping(newMapping)                  
+                  
+              }              
+            }
+            if (features.scenemidi) {
+              setTimeout(() => {
+                getScenes()
+                initMidi()
+              }, 100);
+            }
+          }}
         >
           Save
         </Button>

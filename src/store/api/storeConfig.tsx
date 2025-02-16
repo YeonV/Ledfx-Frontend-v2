@@ -1,6 +1,3 @@
-/* eslint-disable no-return-await */
-/* eslint-disable no-param-reassign */
-/* eslint-disable import/no-cycle */
 import { produce } from 'immer'
 import { Ledfx } from '../../api/ledfx'
 import type { IStore } from '../useStore'
@@ -30,8 +27,8 @@ export interface IPreset {
 }
 export interface IPresets {
   effect: string
-  default_presets: Record<string, IPreset>
-  custom_presets: Record<string, IPreset>
+  ledfx_presets: Record<string, IPreset>
+  user_presets: Record<string, IPreset>
 }
 
 export interface IDevice {
@@ -59,6 +56,9 @@ export interface ISystemConfig {
     mic_rate: number
     min_volume: number
     sample_rate: number
+    pitch_method: string
+    pitch_tolerance: number
+    onset_method: string
   }
   user_colors: Record<string, string>
   devices: undefined
@@ -67,6 +67,7 @@ export interface ISystemConfig {
   melbanks: {
     max_frequencies: number[]
     min_frequency: number
+    coeffs_type: string
   }
   global_transitions: boolean
   virtuals: undefined
@@ -78,6 +79,7 @@ export interface ISystemConfig {
   configuration_version: string
   scenes: undefined
   scan_on_startup: boolean
+  flush_on_deactivate: boolean
 }
 
 const storeConfig = (set: any) => ({
@@ -141,7 +143,8 @@ const storeConfig = (set: any) => ({
   getLedFxPresets: async () => {
     const resp = await Ledfx('/api/config')
     if (resp && resp.host) {
-      return resp.ledfx_presets
+      if (resp.ledfx_presets) return resp.ledfx_presets
+      if (resp.default_presets) return resp.default_presets
     }
     return set(
       produce((state: IStore) => {
@@ -156,7 +159,7 @@ const storeConfig = (set: any) => ({
     if (resp && resp.host) {
       set(
         produce((state: IStore) => {
-          state.config.user_presets = resp.user_presets
+          state.config.user_presets = resp.user_presets || resp.custom_presets
         }),
         false,
         'api/getUserPresets'

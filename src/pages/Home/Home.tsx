@@ -1,6 +1,3 @@
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable no-plusplus */
-/* eslint-disable no-await-in-loop */
 import { useEffect, useState } from 'react'
 
 import { useSnackbar } from 'notistack'
@@ -20,7 +17,7 @@ export default function Home() {
   const scanForDevices = useStore((state) => state.scanForDevices)
   const getDevices = useStore((state) => state.getDevices)
   const getVirtuals = useStore((state) => state.getVirtuals)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+
   const [scanning, setScanning] = useState(-1)
   const [lastFound, setLastFound] = useState([] as string[])
   const features = useStore((state) => state.features)
@@ -57,10 +54,13 @@ export default function Home() {
         }
       }
     }
-    document.addEventListener('YZ_device_created', handleWebsockets)
+
+    document.addEventListener('device_created', handleWebsockets)
+
     return () => {
-      document.removeEventListener('YZ_device_created', handleWebsockets)
+      document.removeEventListener('device_created', handleWebsockets)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

@@ -4,7 +4,7 @@ import { IMCell } from '../pages/Devices/EditVirtuals/EditMatrix/M.utils'
 
 /* eslint-disable @typescript-eslint/indent */
 export const drawerWidth = 240
-export const frontendConfig = 12
+export const frontendConfig = 13
 
 export const formatTime = (dura: number) => {
   let seconds: string | number
@@ -72,7 +72,7 @@ export const swap = (array: any[], i: number, j: number) => {
   return arr
 }
 
-export const deleteFrontendConfig = () => {
+export const deleteFrontendConfig = (skipReload?: boolean) => {
   window.localStorage.removeItem('undefined')
   window.localStorage.removeItem('ledfx-storage')
   window.localStorage.removeItem('ledfx-host')
@@ -80,7 +80,7 @@ export const deleteFrontendConfig = () => {
   window.localStorage.removeItem('ledfx-ws')
   window.localStorage.removeItem('ledfx-theme')
   window.localStorage.removeItem('ledfx-frontend')
-  window.location.reload()
+  if (!skipReload ) window.location.reload()
 }
 
 export const initFrontendConfig = () => {
@@ -96,7 +96,7 @@ export const initFrontendConfig = () => {
 
 export const log = (...props: any[]) => {
   if (typeof props[0] === 'string') {
-    // eslint-disable-next-line no-console
+     
     console.log(
       `%c ${props[0]
         .replace('success', '')
@@ -117,7 +117,7 @@ export const log = (...props: any[]) => {
 }
 
 export const sleep = (ms: number) => {
-  // eslint-disable-next-line no-promise-executor-return
+   
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
@@ -134,7 +134,7 @@ export const ordered = (unordered: Record<string, any>) =>
   Object.keys(unordered)
     .sort()
     .reduce((obj: any, key) => {
-      // eslint-disable-next-line no-param-reassign
+       
       obj[key] = unordered[key]
       return obj
     }, {})

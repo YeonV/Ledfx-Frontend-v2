@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-no-useless-fragment */
-import { Tooltip } from '@mui/material'
 import useStore from '../../store/useStore'
 import { SettingsRow } from './SettingsComponents'
 
@@ -10,17 +8,25 @@ const BetaFeatures = () => {
 
   return (
     <>
-      <Tooltip title="Press Start button on your gamepad. Else try other buttons :)">
-        <SettingsRow
-          title="Gamepad"
-          checked={features.gamepad}
-          onChange={() => setFeatures('gamepad', !features.gamepad)}
-        />
-      </Tooltip>
+      <SettingsRow
+        title="Gamepad"
+        checked={features.gamepad}
+        onChange={() => setFeatures('gamepad', !features.gamepad)}
+      />
+      <SettingsRow
+        title="MIDI"
+        checked={features.scenemidi}
+        onChange={() => setFeatures('scenemidi', !features.scenemidi)}
+      />
       <SettingsRow
         title="Effect Filter"
         checked={features.effectfilter}
         onChange={() => setFeatures('effectfilter', !features.effectfilter)}
+      />
+      <SettingsRow
+        title="Wakelock"
+        checked={features.wakelock}
+        onChange={() => setFeatures('wakelock', !features.wakelock)}
       />
       {showFeatures.integrations ? (
         <SettingsRow

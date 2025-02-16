@@ -74,7 +74,6 @@ const AddWledDialog = () => {
       icon_name: 'wled'
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     // let icon = 'wled'
     const promises: any = apiRef.current.getSelectedRows().forEach((row) => {
       // if row.name is part of a key of nametoicon then return the value else 'wled'
@@ -111,6 +110,8 @@ const AddWledDialog = () => {
       })
   }
 
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const col: GridColDef[] = [
     { field: 'name', headerName: 'Name', width: 130 },
     { field: 'ip_address', headerName: 'IP', width: 130 }
@@ -124,6 +125,7 @@ const AddWledDialog = () => {
         width: 100
       }
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [col]
   )
   return (

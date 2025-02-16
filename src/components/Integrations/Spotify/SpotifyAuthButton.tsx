@@ -1,10 +1,7 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react'
 import Button from '@mui/material/Button'
-import axios from 'axios'
-import Cookies from 'universal-cookie/es6'
+// import axios from 'axios'
+import Cookies from 'universal-cookie'
 import getPkce from 'oauth-pkce'
 import isElectron from 'is-electron'
 import { Login, Logout } from '@mui/icons-material'
@@ -15,10 +12,12 @@ import {
   logoutAuth
 } from '../../../utils/spotifyProxies'
 import useIntegrationCardStyles from '../../../pages/Integrations/IntegrationCard/IntegrationCard.styles'
-import { log } from '../../../utils/helpers'
+// import { log } from '../../../utils/helpers'
 
-// eslint-disable-next-line prettier/prettier
-const baseURL = isElectron() ? 'http://localhost:8888' : window.location.href.split('/#')[0].replace(/\/+$/, '') || 'http://localhost:8888';
+const baseURL = isElectron()
+  ? 'http://localhost:8888'
+  : window.location.href.split('/#')[0].replace(/\/+$/, '') ||
+    'http://localhost:8888'
 // const baseURL = isElectron() ? 'http://localhost:8888' : window.location.href.split('/#')[0].replace(/\/+$/, '') || 'http://localhost:8888';
 const storedURL = window.localStorage.getItem('ledfx-host')
 const redirectUrl = `${
@@ -74,6 +73,7 @@ const SpotifyAuthButton = ({ disabled = false }: any) => {
     if (cookies.get('access_token')) {
       setspAuthenticated(true)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const beginAuth = () => {
     cookies.set('verifier', (codes as any).verifier)
@@ -110,10 +110,10 @@ const SpotifyAuthButton = ({ disabled = false }: any) => {
       try {
         finishAuth()
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.warn(err)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -123,6 +123,7 @@ const SpotifyAuthButton = ({ disabled = false }: any) => {
     } else {
       setspAuthenticated(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cookies])
 
   return !spAuthenticated ? (

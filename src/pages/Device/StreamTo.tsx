@@ -1,4 +1,3 @@
-/* eslint-disable react/require-default-props */
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
@@ -64,6 +63,7 @@ const StreamToCard = ({
         cref.current = virtuals[virtual.id]?.effect
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [virtuals[virtual.id]?.effect])
 
   return (

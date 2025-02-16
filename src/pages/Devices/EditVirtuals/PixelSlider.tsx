@@ -5,31 +5,28 @@ import { Stack, TextField } from '@mui/material'
 import useStore from '../../../store/useStore'
 
 const PixelSlider = ({ s, handleRangeSegment }: any) => {
-  const getDevices = useStore((state) => state.getDevices)
   const devices = useStore((state) => state.devices)
 
   const [range, setRange] = useState([s[1], s[2]])
-
-  useEffect(() => {
-    getDevices()
-  }, [getDevices])
-
-  useEffect(() => {
-    setRange([s[1], s[2]])
-  }, [s])
-
-  if (!devices[s[0]]) {
-    return null
-  }
-
-  const pixelRange = [s[1], s[2]]
 
   const handleChange = (_event: any, newValue: any) => {
     if (newValue !== pixelRange) {
       handleRangeSegment(newValue[0], newValue[1])
     }
   }
+
   const throttled = useThrottledCallback(handleChange, 100)
+
+  useEffect(() => {
+    setRange([s[1], s[2]])
+  }, [s])
+
+
+  if (!devices[s[0]]) {
+    return null
+  }
+
+  const pixelRange = [s[1], s[2]]
 
   const marks = [
     { value: 0, label: 1 },

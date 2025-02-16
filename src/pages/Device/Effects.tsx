@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/indent */
-/* eslint-disable consistent-return */
-/* eslint-disable no-restricted-syntax */
+
 import { useEffect, useState } from 'react'
 import {
   Button,
@@ -18,9 +17,10 @@ import {
   Pause,
   PlayArrow,
   GridOn,
-  GridOff
+  GridOff,
+  Fullscreen
 } from '@mui/icons-material'
-
+import { useNavigate } from 'react-router-dom'
 import useStore from '../../store/useStore'
 import EffectDropDown from '../../components/SchemaForm/components/DropDown/DropDown.wrapper'
 import BladeEffectSchemaForm from '../../components/SchemaForm/EffectsSchemaForm/EffectSchemaForm'
@@ -76,7 +76,8 @@ const orderEffectProperties = (
 
 const EffectsCard = ({ virtId }: { virtId: string }) => {
   const [fade, setFade] = useState(false)
-  const [matrix, setMatrix] = useState(false)
+  const showMatrix = useStore((state) => state.showMatrix)
+  const [matrix, setMatrix] = useState(showMatrix)
   const getVirtuals = useStore((state) => state.getVirtuals)
   // const getDevice = useStore((state) => state.getDevice)
   const getSchemas = useStore((state) => state.getSchemas)
@@ -91,6 +92,7 @@ const EffectsCard = ({ virtId }: { virtId: string }) => {
   const updateVirtual = useStore((state) => state.updateVirtual)
   const features = useStore((state) => state.features)
   const [virtual, setVirtual] = useState<Virtual | undefined>(undefined)
+  const navigate = useNavigate()
 
   const graphs = useStore((state) => state.graphs)
   const getV = () => {
@@ -104,6 +106,7 @@ const EffectsCard = ({ virtId }: { virtId: string }) => {
   useEffect(() => {
     const v = getV()
     if (v) setVirtual(v)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(virtuals[virtId])])
 
   const effectType = virtual && virtual.effect.type
@@ -153,6 +156,7 @@ const EffectsCard = ({ virtId }: { virtId: string }) => {
     if (graphs) {
       setPixelGraphs([virtId])
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graphs, setPixelGraphs, getVirtuals, getSchemas, effectType])
 
   useEffect(() => {
@@ -170,16 +174,8 @@ const EffectsCard = ({ virtId }: { virtId: string }) => {
 
       setTheModel(virtual?.effect.config)
     }
-  }, [
-    virtuals,
-    virtuals[virtId],
-    virtuals[virtId]?.effect,
-    JSON.stringify(virtuals[virtId]?.effect?.config),
-    virtual,
-    virtual?.effect,
-    virtual?.effect.config,
-    effectType
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [virtuals,virtuals[virtId],virtuals[virtId]?.effect,JSON.stringify(virtuals[virtId]?.effect?.config),virtual,virtual?.effect,virtual?.effect.config,effectType])
 
   // console.log('virtual', virtual?.effect?.config)
   return (
@@ -228,6 +224,15 @@ const EffectsCard = ({ virtId }: { virtId: string }) => {
                       onClick={() => setMatrix(!matrix)}
                     >
                       {matrix ? <GridOff /> : <GridOn />}
+                    </Button>
+                  )}
+                  {virtual.config.rows > 1 && (
+                    <Button
+                      style={{ marginRight: '.5rem' }}
+                      className="step-device-seven"
+                      onClick={() => navigate(`/graph/${virtId}`)}
+                    >
+                      <Fullscreen />
                     </Button>
                   )}
                   <Button

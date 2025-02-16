@@ -1,4 +1,3 @@
-/* eslint-disable no-plusplus */
 import { useEffect } from 'react'
 import { makeStyles } from '@mui/styles'
 import { Alert, Collapse } from '@mui/material'
@@ -51,9 +50,9 @@ const Devices = () => {
         getDevices()
       }
     }
-    document.addEventListener('YZold', handleWebsockets)
+    document.addEventListener('devices_updated', handleWebsockets)
     return () => {
-      document.removeEventListener('YZold', handleWebsockets)
+      document.removeEventListener('devices_updated', handleWebsockets)
     }
   }, [getDevices])
 
@@ -67,9 +66,9 @@ const Devices = () => {
       // console.log("Send");
       ;(ws as any).send(JSON.stringify(++req.id && req))
     }
-    document.addEventListener('YZold', handleWebsockets)
+    document.addEventListener('devices_updated', handleWebsockets)
     return () => {
-      document.removeEventListener('YZold', handleWebsockets)
+      document.removeEventListener('devices_updated', handleWebsockets)
     }
   }, [fPixels])
 
@@ -77,6 +76,7 @@ const Devices = () => {
     if (graphs && graphsMulti) {
       setPixelGraphs(Object.keys(virtuals))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graphs, graphsMulti, setPixelGraphs])
 
   return (

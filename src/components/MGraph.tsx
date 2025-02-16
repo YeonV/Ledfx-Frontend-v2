@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { useEffect, useState } from 'react'
 import { Line } from 'react-chartjs-2'
 import {
@@ -11,18 +10,22 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler,
+  Filler
 } from 'chart.js'
 import {
   Card,
   CardContent,
   CardHeader,
+  Fab,
+  Grid,
   Slider,
+  Stack,
   Switch,
   TextField,
-  useTheme,
+  useTheme
 } from '@mui/material'
 import BladeFrame from './SchemaForm/components/BladeFrame'
+import { Tune } from '@mui/icons-material'
 
 ChartJS.register(
   CategoryScale,
@@ -37,7 +40,11 @@ ChartJS.register(
 )
 
 const MGraph = () => {
-  const [data, setData] = useState({} as any)
+  // const [data, setData] = useState({} as any)
+  const [data1, setData1] = useState({} as any)
+  const [data2, setData2] = useState({} as any)
+  const [data3, setData3] = useState({} as any)
+  const [showSettings, setShowSettings] = useState(false)
   const theme = useTheme()
 
   const [scaleType, setScaleType] = useState(false)
@@ -81,6 +88,7 @@ const MGraph = () => {
   interface MessageData {
     frequencies: any[]
     melbank: [number[], number[], number[]]
+    graph_id?: string
   }
 
   useEffect(() => {
@@ -93,13 +101,13 @@ const MGraph = () => {
             label: '',
             id: 1,
             lineTension,
-            backgroundColor: `#0dbedc${fillOpacity.toString(16)}`,
+            backgroundColor: `${theme.palette.primary.main}${fillOpacity.toString(16)}`,
             fill: true,
             borderColor: theme.palette.primary.main,
             pointRadius: 0,
-            data: messageData.melbank,
-          },
-        ],
+            data: messageData.melbank
+          }
+        ]
       }
 
       // Adjust the axes based on the max
@@ -109,35 +117,36 @@ const MGraph = () => {
         tooltips: { enabled: false },
         hover: {
           animationDuration: 0,
-          mode: null,
+          mode: null
         },
         animation: {
-          duration: animationDuration,
+          duration: animationDuration
         },
         responsiveAnimationDuration: 0,
         scales: {
           xAxis: {
             display: false,
-            maxTicksLimit: 3,
+            maxTicksLimit: 3
           },
           x: {
             display: true,
             title: {
               display: true,
-              text: 'Frequency',
+              text: 'Frequency'
             },
             ticks: {
               borderColor: '#fff',
               maxTicksLimit: 12,
-              callback(value: any, _index: any, _values: any) {
-                return `${value} Hz`
-              },
+              callback: (value: any, _index: number) => {
+                console.log('frequencies', messageData.frequencies)
+                const frequency = messageData.frequencies[_index];
+                return `${JSON.stringify(frequency)} Hz`;
+              }
             },
             grid: {
-              color: 'rgba(255, 255, 255, 0)',
-              // borderColor: 'rgba(255, 255, 255, 0.15)',
+              color: 'rgba(255, 255, 255, 0)'
             },
-            ...(scaleType && { type: 'logarithmic' }),
+            ...(scaleType && { type: 'logarithmic' })
           },
           yAxis: {
             min: 0,
@@ -146,44 +155,59 @@ const MGraph = () => {
           y: {
             title: {
               display: true,
-              text: 'Melbank',
+              text: 'Melbank ' + messageData.graph_id?.split('_')[1]
             },
             ticks: {
               display: false,
               maxTicksLimit: 7,
               callback(value: any, _index: any, _values: any) {
                 return `${parseFloat(value).toFixed(2)}`
-              },
-            },
-            // grid: {
-            //   color: 'rgba(255, 255, 255, 0)',
-            //   // borderColor: 'rgba(255, 255, 255, 0.15)',
-            // },
-          },
+              }
+            }
+          }
         },
         plugins: {
           legend: {
-            display: false,
-          },
-        },
+            display: false
+          }
+        }
       }
-      setData({ chartData, chartOptions })
+      // setData({ chartData, chartOptions })
+      switch (messageData.graph_id) {
+        case 'melbank_0':
+          setData1({ chartData, chartOptions});
+          break
+        case 'melbank_1':
+          setData2({ chartData, chartOptions})
+          break
+        case 'melbank_2':
+          setData3({ chartData, chartOptions})
+          break
+        default:
+          break
+      }
     }
-    document.addEventListener('YZoldDev', handleWebsockets)
+    document.addEventListener('graph_update', handleWebsockets)
     return () => {
-      document.removeEventListener('YZoldDev', handleWebsockets)
+      document.removeEventListener('graph_update', handleWebsockets)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animationDuration, fillOpacity, scaleType])
 
-  
   return (
-    <div>
+    <Stack alignItems={'center'} sx={{ position: 'relative' }}>
+      <Fab color='primary' sx={{ position: 'absolute', top: '24px'}} onClick={() => setShowSettings(!showSettings)}>
+        <Tune />
+      </Fab>    
       <Card
         style={{
+          display: !showSettings ? 'none' : '',
           maxWidth: 720,
           width: '100%',
           margin: '3rem',
-          background: '#1c1c1e',
+          // background: theme.palette.mode === 'dark' ? '#1c1c1e' : ''
+          background: theme.palette.background.paper,
+          // border: theme.palette.background.paper === '#000000' ? '1px solid #333' : ''
         }}
       >
         <CardHeader title="Melbank Graph Settings" />
@@ -203,7 +227,7 @@ const MGraph = () => {
             />
             <TextField
               InputProps={{
-                endAdornment: 'ms',
+                endAdornment: 'ms'
               }}
               type="number"
               value={
@@ -213,7 +237,7 @@ const MGraph = () => {
               style={{
                 marginLeft: '2rem',
                 width: '130px',
-                backgroundColor: theme.palette.background.paper,
+                backgroundColor: theme.palette.background.paper
               }}
             />
           </BladeFrame>
@@ -230,7 +254,7 @@ const MGraph = () => {
             />
             <TextField
               InputProps={{
-                endAdornment: '%',
+                endAdornment: '%'
               }}
               type="number"
               value={typeof fillOpacity === 'number' ? fillOpacity : 0}
@@ -238,7 +262,7 @@ const MGraph = () => {
               style={{
                 marginLeft: '2rem',
                 width: '130px',
-                backgroundColor: theme.palette.background.paper,
+                backgroundColor: theme.palette.background.paper
               }}
             />
           </BladeFrame>
@@ -257,7 +281,7 @@ const MGraph = () => {
             />
             <TextField
               InputProps={{
-                endAdornment: '',
+                endAdornment: ''
               }}
               type="number"
               value={typeof lineTension === 'number' ? lineTension : 0}
@@ -265,7 +289,7 @@ const MGraph = () => {
               style={{
                 marginLeft: '2rem',
                 width: '130px',
-                backgroundColor: theme.palette.background.paper,
+                backgroundColor: theme.palette.background.paper
               }}
             />
           </BladeFrame>
@@ -281,14 +305,24 @@ const MGraph = () => {
           </BladeFrame>
         </CardContent>
       </Card>
-      <div
-        style={{ maxWidth: 720, width: '100%', height: 500, margin: '3rem' }}
-      >
-        {data?.chartData && data?.chartOptions && data?.chartData?.labels && (
-          <Line data={data.chartData} options={data.chartOptions} />
+      <Grid container spacing={2} justifyContent={'center'}>
+       <div style={{ maxWidth: 700, width: '100%', height: 350, margin: '3rem' }}>
+        {data1?.chartData && data1?.chartOptions && data1?.chartData?.labels && (
+          <Line data={data1.chartData} options={data1.chartOptions} />
         )}
       </div>
-    </div>
+      <div style={{ maxWidth: 700, width: '100%', height: 350, margin: '3rem' }}>
+        {data2?.chartData && data2?.chartOptions && data2?.chartData?.labels && (
+          <Line data={data2.chartData} options={data2.chartOptions} />
+        )}
+      </div>
+      <div style={{ maxWidth: 700, width: '100%', height: 350, margin: '3rem' }}>
+        {data3?.chartData && data3?.chartOptions && data3?.chartData?.labels && (
+          <Line data={data3.chartData} options={data3.chartOptions} />
+        )}
+      </div>
+      </Grid>
+    </Stack>
   )
 }
 export default MGraph

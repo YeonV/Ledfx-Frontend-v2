@@ -79,8 +79,7 @@ const Gamepad = ({ setScene, bottom }: any) => {
     setScanning(0)
     scanForDevices()
       .then(async () => {
-        // eslint-disable-next-line no-plusplus
-        for (let sec = 1; sec <= 30; sec++) {
+        for (let sec = 1; sec <= 30; sec += 1) {
           if (scanning === -1) break
           sleep(1000).then(() => {
             getDevices()
@@ -105,7 +104,6 @@ const Gamepad = ({ setScene, bottom }: any) => {
         (k: any) => g[k]?.buttons[8].pressed && g[k]?.buttons[9].pressed
       )
     ) {
-      // eslint-disable-next-line no-alert
       alert('DevMode activated!')
       setFeatures('dev', true)
     } else if (
@@ -124,58 +122,59 @@ const Gamepad = ({ setScene, bottom }: any) => {
     }
   })
 
+  function handleButtonPress(command: string, payload?: any) {
+    if (command === 'scene' && payload?.scene) {
+      setScene(payload.scene);
+    } else if (command === 'padscreen') {
+      setOpen(!open);
+    } else if (command === 'smartbar') {
+      setSmartBarPadOpen(!smartBarPadOpen);
+    } else if (command === 'play/pause') {
+      togglePause();
+    } else if (command === 'brightness-up') {
+      setSystemSetting(
+        'global_brightness',
+        Math.min(brightness + 0.1, 1).toFixed(2)
+      );
+    } else if (command === 'brightness-down') {
+      setSystemSetting(
+        'global_brightness',
+        Math.max(brightness - 0.1, 0).toFixed(2)
+      );
+    } else if (command === 'scan-wled') {
+      handleScan();
+    } else if (command === 'copy-to') {
+      setFeatures('streamto', !features.streamto);
+    } else if (command === 'transitions') {
+      setFeatures('transitions', !features.transitions);
+    } else if (command === 'frequencies') {
+      setFeatures('frequencies', !features.frequencies);
+    } else if (command === 'scene-playlist') {
+      toggleScenePLplay();
+    } else if (command === 'one-shot') {
+      oneShotAll(
+        payload?.color || '#0dbedc',
+        payload?.ramp || 10,
+        payload?.hold || 200,
+        payload?.fade || 2000
+      );
+    }
+  }
+
   useEffect(() => {
     if (!blocked) {
       const m = [pad0, pad1, pad2, pad3]
-      m.map((pad: any) => {
-        return pad?.buttons.map((b: any, i: number) => {
+      m.map((pad: any) =>
+        pad?.buttons.map((b: any, i: number) => {
           const test =
             b.pressed &&
             b.value === 1 &&
             mapping[pad.index][i] &&
             mapping[pad.index][i].command &&
             mapping[pad.index][i].command !== 'none'
-          if (test) {
-            if (
-              mapping[pad.index][i].command === 'scene' &&
-              mapping[pad.index][i].payload?.scene
-            ) {
-              setScene(mapping[pad.index][i].payload.scene)
-            } else if (mapping[pad.index][i].command === 'padscreen') {
-              setOpen(!open)
-            } else if (mapping[pad.index][i].command === 'smartbar') {
-              setSmartBarPadOpen(!smartBarPadOpen)
-            } else if (mapping[pad.index][i].command === 'play/pause') {
-              togglePause()
-            } else if (mapping[pad.index][i].command === 'brightness-up') {
-              setSystemSetting(
-                'global_brightness',
-                Math.min(brightness + 0.1, 1).toFixed(2)
-              )
-            } else if (mapping[pad.index][i].command === 'brightness-down') {
-              setSystemSetting(
-                'global_brightness',
-                Math.max(brightness - 0.1, 0).toFixed(2)
-              )
-            } else if (mapping[pad.index][i].command === 'scan-wled') {
-              handleScan()
-            } else if (mapping[pad.index][i].command === 'copy-to') {
-              setFeatures('streamto', !features.streamto)
-            } else if (mapping[pad.index][i].command === 'transitions') {
-              setFeatures('transitions', !features.transitions)
-            } else if (mapping[pad.index][i].command === 'frequencies') {
-              setFeatures('frequencies', !features.frequencies)
-            } else if (mapping[pad.index][i].command === 'scene-playlist') {
-              toggleScenePLplay()
-            } else if (mapping[pad.index][i].command === 'one-shot') {
-              oneShotAll(
-                mapping[pad.index][i].payload?.color || '#0dbedc',
-                mapping[pad.index][i].payload?.ramp || 10,
-                mapping[pad.index][i].payload?.hold || 200,
-                mapping[pad.index][i].payload?.fade || 2000
-              )
-            }
-          } else if (pad.axes[0] === 1 && analogBrightness[0]) {
+            if (test) {
+              handleButtonPress(mapping[pad.index][i].command!, mapping[pad.index][i].payload);
+            } else if (pad.axes[0] === 1 && analogBrightness[0]) {
             setSystemSetting(
               'global_brightness',
               Math.min(brightness + 0.1, 1).toFixed(2)
@@ -218,8 +217,9 @@ const Gamepad = ({ setScene, bottom }: any) => {
           }
           return null
         })
-      })
+      )
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pad0, pad1, pad2, pad3])
 
   return gp ? (
@@ -389,19 +389,17 @@ const Gamepad = ({ setScene, bottom }: any) => {
                     spacing={1}
                     sx={{ mt: 2, minWidth: 300 }}
                   >
-                    {pad?.buttons.map((b: any, i: number) => {
-                      return (
-                        <Assign
-                          // disabled={i === 16}
-                          padIndex={pad.index}
-                          mapping={mapping}
-                          setMapping={setMapping}
-                          pressed={b.pressed}
-                          index={i}
-                          key={i}
-                        />
-                      )
-                    })}
+                    {pad?.buttons.map((b: any, i: number) => (
+                      <Assign
+                        // disabled={i === 16}
+                        padIndex={pad.index}
+                        mapping={mapping}
+                        setMapping={setMapping}
+                        pressed={b.pressed}
+                        index={i}
+                        key={i}
+                      />
+                    ))}
                   </Stack>
                 </Stack>
               ) : (

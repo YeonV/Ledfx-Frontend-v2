@@ -16,6 +16,7 @@ import ExpertFeatures from './ExpertFeatures'
 import DevicesSection from './DevicesSection'
 import SmartBar from '../../components/Dialogs/SmartBar'
 import ScenesSection from './ScenesSection'
+import MidiCard from './MidiCard'
 // import IntegrationsSection from './IntegrationsSection'
 
 const Settings = () => {
@@ -30,6 +31,7 @@ const Settings = () => {
     if (loc.search.indexOf('ui') > -1) {
       setSettingsExpanded('panel2')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loc])
 
   return (
@@ -84,6 +86,10 @@ const Settings = () => {
           <IntegrationsSection />
         </SettingsAccordion>
       )} */}
+
+      {features.scenemidi && <SettingsAccordion title="MIDI" accId="2b" icon="mdi:midi">
+        <MidiCard />
+      </SettingsAccordion>}
       <SettingsAccordion title="UI" accId="2a" icon="Widgets">
         <UICard />
       </SettingsAccordion>

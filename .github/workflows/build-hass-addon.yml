@@ -54,11 +54,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: "./ledfx_frontend_hass_dev.zip"
+          file: './ledfx_frontend_hass_dev.zip'
           overwrite: true
           update_latest_release: true
 
-          
       # - name: Prepare Trigger Hass
       #   id: hass
       #   run: |
@@ -72,4 +71,3 @@ jobs:
       #     ref: refs/heads/master
       #     token: ${{ secrets.LEDFX_HOMEASSISTANT_ADDON }}
       #     inputs: '{ "version": "${{ steps.hass.outputs.id}}" }'
-

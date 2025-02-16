@@ -36,3 +36,6 @@ extraResources/*
 .github/workflows/workflow-file-private.yml
 .yarn_cache/*
 
+BladeTools.pfx
+storybook.log
+doctor-storybook.log

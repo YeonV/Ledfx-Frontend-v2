@@ -35,7 +35,8 @@ const useStyles = makeStyles(() => ({
   drawerHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    minHeight: '55px',
   },
   logo: {
     position: 'relative',
@@ -53,6 +54,10 @@ const useStyles = makeStyles(() => ({
     '&,&:hover': {
       color: '#FFFFFF'
     }
+    // '&::before': {
+    //   content: '"LedFx"',
+    //   marginRight: '10px'
+    // }
   },
   logoImage: {
     width: '30px',
@@ -82,6 +87,15 @@ const useStyles = makeStyles(() => ({
     transform: 'scale(0.9)',
     marginRight: '-15px',
     transformOrigin: 'left center'
+    // display: 'flex', // Add this line to make the devbadge a flex container
+    // justifyContent: 'center', // Center the text horizontally
+    // alignItems: 'center', // Center the text vertically
+    // '&::before': {
+    //   content: '"LedFx"',
+    //   position: 'absolute', // Position the text absolutely within the devbadge element
+    //   color: '#FFFFFF',
+    //   fontSize: '25px'
+    // }
   }
 }))
 export default useStyles

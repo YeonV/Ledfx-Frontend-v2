@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/indent */
-/* eslint-disable no-unused-expressions */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable guard-for-in */
+
 import { useState, useEffect } from 'react'
 import { styled } from '@mui/material/styles'
 import {
@@ -95,9 +93,9 @@ const AddIntegrationDialog = () => {
     const defaultModel = {} as any
 
     for (const key in currentSchema.properties) {
-      currentSchema.properties[key].default !== undefined
-        ? (defaultModel[key] = currentSchema.properties[key].default)
-        : undefined
+      if (currentSchema.properties[key].default !== undefined) {
+        defaultModel[key] = currentSchema.properties[key].default
+      }
     }
 
     const valid = !currentSchema.required
@@ -146,8 +144,8 @@ const AddIntegrationDialog = () => {
   }
 
   useEffect(() => {
-    handleTypeChange(initial.type, initial.config)
-  }, [initial.type])
+    handleTypeChange(initial.type, initial.config) // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial.type, JSON.stringify(initial.config)])
 
   return (
     <StyledDialog

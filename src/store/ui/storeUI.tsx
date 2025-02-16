@@ -1,10 +1,18 @@
-/* eslint-disable no-param-reassign */
 import { produce } from 'immer'
 import { VariantType } from 'notistack'
 import pkg from '../../../package.json'
 import type { IStore } from '../useStore'
 
 const storeUI = (set: any) => ({
+  currentTheme: '',
+  setCurrentTheme: (theme: string): void =>
+    set(
+      produce((state: IStore) => {
+        state.ui.currentTheme = theme
+      }),
+      false,
+      'ui/currentTheme'
+    ),
   effectDescriptions: 'Hide' as 'Auto' | 'Show' | 'Hide',
   setEffectDescriptions: (mode: 'Auto' | 'Show' | 'Hide'): void =>
     set(
@@ -55,10 +63,14 @@ const storeUI = (set: any) => ({
     scenes: true,
     devices: true,
     user: true,
-    gamepad: true
+    gamepad: true,
+    matrix: true,
+    camera: true,
+    matrixGroups: true,
+    pixelMode: true
   },
   setInfoAlerts: (
-    key: 'scenes' | 'devices' | 'user' | 'gamepad',
+    key: 'scenes' | 'devices' | 'user' | 'gamepad' | 'matrix' | 'camera' | 'matrixGroups' | 'pixelMode',
     val: boolean
   ): void =>
     set(

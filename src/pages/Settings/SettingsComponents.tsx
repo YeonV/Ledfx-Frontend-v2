@@ -1,4 +1,5 @@
-/* eslint-disable react/jsx-no-useless-fragment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { makeStyles, styled } from '@mui/styles'
 import {
   Accordion,
@@ -136,7 +137,7 @@ export const SettingsSwitch = styled(Switch)(({ theme }: any) => ({
     transitionDuration: '300ms',
     '&.Mui-checked': {
       transform: 'translateX(24px)',
-      color: '#fff',
+      color: theme.palette.primary.main === '#FFFFFF' ? '#000' : '#fff',
       '& + .MuiSwitch-track': {
         backgroundColor: theme.palette.primary,
         opacity: 1,
@@ -181,17 +182,15 @@ export const SettingsButton = (props: any) => {
 }
 
 export const SettingsRow = ({
-  step,
-  title,
-  checked,
+  title = '',
+  step = 'x',
+  children = null,
+  value = null,
+  checked = false,
+  direct = false,
   onChange,
-  children,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-  direct,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-  value,
-  style,
-  disabled
+  style = null,
+  disabled = false
 }: {
   step?: string
   title: string
@@ -225,46 +224,33 @@ export const SettingsRow = ({
           textAlign: 'right'
         }}
       >
-        {
-          // ios ? (
-          //   children ? (
-          //     value
-          //   ) : direct ? (
-          //     <SettingsSwitch checked={checked} onChange={onChange} />
-          //   ) : null
-          // ) :
-          children ||
-            (title === 'Beta Mode' ? (
-              <Tooltip title="AlphaMode: Smartbar -> HackedByBlade! -> OK -> BladeAlpha">
-                <SettingsSwitch
-                  disabled={disabled}
-                  checked={checked}
-                  onChange={onChange}
-                />
-              </Tooltip>
-            ) : (
+        {children ||
+          (title === 'Beta Mode' ? (
+            <Tooltip title="AlphaMode: Smartbar -> HackedByBlade! -> OK -> BladeAlpha">
               <SettingsSwitch
                 disabled={disabled}
                 checked={checked}
                 onChange={onChange}
               />
-            ))
-        }
-        {/* {ios && !direct && <ChevronRight sx={{ ml: 1, color: '#57565a' }} />} */}
+            </Tooltip>
+          ) : title === 'Gamepad' ? (
+            <Tooltip title="Press Start button on your gamepad. Else try other buttons :)">
+              <SettingsSwitch
+                disabled={disabled}
+                checked={checked}
+                onChange={onChange}
+              />
+            </Tooltip>
+          ) : (
+            <SettingsSwitch
+              disabled={disabled}
+              checked={checked}
+              onChange={onChange}
+            />
+          ))}
       </div>
     </div>
   )
-}
-
-SettingsRow.defaultProps = {
-  step: 'x',
-  children: null,
-  value: null,
-  checked: false,
-  direct: false,
-  onChange: null,
-  style: null,
-  disabled: false
 }
 
 export const SettingsAccordion = ({
@@ -276,7 +262,7 @@ export const SettingsAccordion = ({
   title: string
   accId: string
   children: any
-  // eslint-disable-next-line react/require-default-props
+
   icon?: string
 }) => {
   const settingsExpanded = useStore((state) => state.ui.settingsExpanded)

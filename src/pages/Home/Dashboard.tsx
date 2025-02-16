@@ -1,9 +1,5 @@
 /* eslint-disable @typescript-eslint/indent */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable no-plusplus */
-/* eslint-disable no-await-in-loop */
+
 import { useEffect, useState } from 'react'
 import {
   Box,
@@ -52,16 +48,16 @@ const Dashboard = () => {
   const [scanning, setScanning] = useState(-1)
 
   const pixelTotal = Object.keys(devices)
-    .map((d) => devices[d].config.pixel_count)
+    .map((d) => !d.startsWith('gap-') && devices[d].config.pixel_count)
     .reduce((a, b) => a + b, 0)
 
-  const devicesOnline = Object.keys(devices).filter((d) => devices[d].online)
+  const devicesOnline = Object.keys(devices).filter((d) => devices[d].online && !devices[d].id.startsWith('gap-'))
   const virtualsReal = Object.keys(virtuals).filter(
-    (d) => !virtuals[d].is_device
+    (d) => !virtuals[d]?.is_device && !virtuals[d]?.id.startsWith('gap-')
   )
 
   const pixelTotalOnline = Object.keys(devices)
-    .map((d) => devices[d].online && devices[d].config.pixel_count)
+    .map((d) => devices[d].online && !devices[d].id.startsWith('gap-') && devices[d].config.pixel_count)
     .reduce((a, b) => a + b, 0)
 
   const getSystemConfig = useStore((state) => state.getSystemConfig)
@@ -90,6 +86,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     getScenes()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -184,7 +181,7 @@ const Dashboard = () => {
           <Stack spacing={2} direction="row">
             <Tooltip title="Startup Assistant">
               <Fab
-                aria-label="scan"
+                aria-label="intro"
                 onClick={() => {
                   setIntro(true)
                 }}
@@ -204,7 +201,7 @@ const Dashboard = () => {
                   height="auto"
                   src={fx}
                   alt="wled"
-                  style={{ filter: 'grayscale(100%) brightness(0)' }}
+                  style={{ filter: `grayscale(100%) brightness(0)${theme.palette.primary.contrastText === '#fff' ? ' invert(1)' : ''}` }}
                 />
               </Fab>
             </Tooltip>
@@ -242,7 +239,7 @@ const Dashboard = () => {
                       {`${Math.round((scanning / 30) * 100)}%`}
                     </Typography>
                   ) : (
-                    <BladeIcon name="wled" />
+                    <BladeIcon name="wled" sx={{ color: theme.palette.primary.contrastText}} />
                   )}
                   {scanning > -1 && (
                     <CircularProgress5
@@ -281,7 +278,7 @@ const Dashboard = () => {
                   height="auto"
                   src={openrgbLogo}
                   alt="wled"
-                  style={{ filter: 'grayscale(100%) brightness(0)' }}
+                  style={{ filter: `grayscale(100%) brightness(0)${theme.palette.primary.contrastText === '#fff' ? ' invert(1)' : ''}` }}
                 />
               </Fab>
             </Tooltip>
@@ -310,6 +307,7 @@ const Dashboard = () => {
                   type="fab"
                   color="primary"
                   style={{ margin: '8px' }}
+                  sx={{ color: theme.palette.primary.contrastText}}
                   icon={<DeleteForever />}
                   text="Delete frontend data?"
                   onConfirm={() => {
@@ -337,12 +335,12 @@ const Dashboard = () => {
           </Tooltip> */}
             <Tooltip title="Guided Tour">
               <span style={{ margin: 0, zIndex: 0 }}>
-                <TourHome className="step-one" variant="fab" />
+                <TourHome className="step-one" variant="fab" sx={{ color: theme.palette.primary.contrastText}} />
               </span>
             </Tooltip>
           </Stack>
           <Stack spacing={2} direction="row" justifyContent="center">
-            <Tooltip title="Github Core (python)">
+            <Tooltip title="Github Core">
               <Fab
                 aria-label="github"
                 onClick={() =>
@@ -357,7 +355,8 @@ const Dashboard = () => {
                   zIndex: 0
                 }}
                 sx={{
-                  bgcolor: theme.palette.text.disabled,
+                  color: theme.palette.primary.contrastText,
+                  bgcolor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.light,
                   '&:hover': {
                     bgcolor: theme.palette.primary.main
                   }
@@ -366,7 +365,7 @@ const Dashboard = () => {
                 <GitHub />
               </Fab>
             </Tooltip>
-            <Tooltip title="Github Client (react)">
+            <Tooltip title="Github Client">
               <Fab
                 aria-label="github"
                 onClick={() =>
@@ -381,7 +380,8 @@ const Dashboard = () => {
                   zIndex: 0
                 }}
                 sx={{
-                  bgcolor: theme.palette.text.disabled,
+                  color: theme.palette.primary.contrastText,
+                  bgcolor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.light,
                   '&:hover': {
                     bgcolor: theme.palette.primary.main
                   }
@@ -405,7 +405,8 @@ const Dashboard = () => {
                   zIndex: 0
                 }}
                 sx={{
-                  bgcolor: theme.palette.text.disabled,
+                  fill: theme.palette.primary.contrastText,
+                  bgcolor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.light,
                   '&:hover': {
                     bgcolor: theme.palette.primary.main
                   }

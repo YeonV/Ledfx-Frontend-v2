@@ -3,7 +3,6 @@ import OtpInput from 'react-otp-input'
 import isElectron from 'is-electron'
 
 const OneTimePassword = ({ enabled }: { enabled: boolean }) => {
-  if (!isElectron()) return null
   const [otp, setOtp] = useState('')
   const [invalidCode, setInvalidCode] = useState(false)
   const [qrCodePng, setQrCodePng] = useState(null)
@@ -23,6 +22,7 @@ const OneTimePassword = ({ enabled }: { enabled: boolean }) => {
 
   useEffect(() => {
     if (otp.length === 6) handleSubmit()
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp])
 
   useEffect(() => {
@@ -35,6 +35,7 @@ const OneTimePassword = ({ enabled }: { enabled: boolean }) => {
         setInvalidCode(!args[1])
         if (args[1]) {
           window.localStorage.removeItem('lock')
+          window.localStorage.removeItem('guestmode')
           window.location.reload()
         }
         if (args[0] === 'mfa-qr-code') {
@@ -42,7 +43,10 @@ const OneTimePassword = ({ enabled }: { enabled: boolean }) => {
         }
       }
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  if (!isElectron()) return null
 
   return (
     <div>

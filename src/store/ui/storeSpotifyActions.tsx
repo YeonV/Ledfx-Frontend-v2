@@ -1,5 +1,3 @@
-/* eslint-disable default-case */
-/* eslint-disable no-param-reassign */
 import { produce } from 'immer'
 import { SpotifyState } from './SpotifyState'
 import type { IStore } from '../useStore'
@@ -200,7 +198,23 @@ const storeSpotifyActions = (set: any) => ({
       }),
       false,
       'spotify/setMe'
-    )
+    ),
+  setCurrentTrack: (track: string) =>
+    set(
+      produce((state: IStore) => {
+        state.spotify.currentTrack = track
+      }),
+      false,
+      'spotify/setCurrentTrack'
+    ),
+  setSendSpotifyTrack: (val: boolean) =>
+    set(
+      produce((state: IStore) => {
+        state.spotify.sendSpotifyTrack = val
+      }),
+      false,
+      'spotify/setSendSpotifyTrack'
+    ),
 })
 
 export default storeSpotifyActions

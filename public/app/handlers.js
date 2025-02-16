@@ -9,13 +9,20 @@ const handlers = async (wind, subprocesses, event, parameters) => {
 
   try {
     switch (parameters.command) {
-      case 'verify_otp':
-        handleVerifyOTP(event, parameters)
-        break
+      case 'close-others':
+        BrowserWindow.getAllWindows().forEach(win => {
+          if (win !== wind) {
+            win.close();
+          }
+        });
+        break;
       case 'get-all-windows':
         const allWIndows = BrowserWindow.getAllWindows()
         console.log('allWIndows', allWIndows)
         wind.webContents.send('fromMain', ['all-windows', allWIndows])
+        break
+      case 'verify_otp':
+        handleVerifyOTP(wind, event, parameters)
         break
       case 'generate-mfa-qr':
         generateMfaQr(event, parameters)
@@ -91,7 +98,7 @@ const handlers = async (wind, subprocesses, event, parameters) => {
         //   path.join(app.getPath('appData'), '.ledfx', 'config.json')
         // )
 
-        if (parameters.instance && parameters.instance !== 'instance1') {          
+        if (parameters.instance && parameters.instance !== 'instance1') {
           shell.showItemInFolder(
             path.join(app.getPath("userData"), '.ledfx-cc', parameters.instance, 'config.json')
           )
@@ -112,7 +119,7 @@ const handlers = async (wind, subprocesses, event, parameters) => {
             path.join(app.getPath('home'), '.ledfx', 'config.json')
           )
         }
-      
+
         break
       case 'restart-client':
         app.relaunch()

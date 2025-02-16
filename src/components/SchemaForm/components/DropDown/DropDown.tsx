@@ -1,17 +1,44 @@
-// import useEffect from 'react'
-// import axios from 'axios'
-import {
-  EffectDropDownDefaultProps,
-  EffectDropDownProps
-} from './DropDown.props'
+// import {
+//   Autocomplete,
+//   Checkbox,
+//   ListItemText,
+//   MenuItem,
+//   Select,
+//   TextField,
+//   ToggleButton,
+//   ToggleButtonGroup
+// } from '@mui/material'
+// import { useMemo, useState } from 'react'
+import { EffectDropDownProps } from './DropDown.props'
+// import useStyles from './DropDown.styles'
 import EffectTypeDialog from '../../../Dialogs/EffectTypeDialog'
 
 const EffectDropDown = ({
-  value,
-  onChange,
-  groups,
-  showFilter,
-  title
+  value = '',
+  onChange = undefined,
+  title = 'Effect Type',
+  groups = {
+    'Group 1': [
+      {
+        name: 'Item 1',
+        id: 'item1',
+        category: 'Group 1'
+      },
+      {
+        name: 'Item2',
+        id: 'item2',
+        category: 'Group 1'
+      }
+    ],
+    'Group 2': [
+      {
+        name: 'Item 1',
+        id: 'item11',
+        category: 'Group 2'
+      }
+    ]
+  },
+  showFilter = false
 }: EffectDropDownProps) => {
   return (
     <>
@@ -26,6 +53,5 @@ const EffectDropDown = ({
     </>
   )
 }
-EffectDropDown.defaultProps = EffectDropDownDefaultProps
 
 export default EffectDropDown

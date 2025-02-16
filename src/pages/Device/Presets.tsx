@@ -15,16 +15,12 @@ import {
   CircularProgress
 } from '@mui/material'
 import { Add, Cloud, Delete, Sync } from '@mui/icons-material'
-import axios from 'axios'
 // import { diff } from 'deep-object-diff'
 import useStore from '../../store/useStore'
 import Popover from '../../components/Popover/Popover'
 import CloudScreen from './Cloud/Cloud'
 import PresetButton from './PresetButton'
-
-const cloud = axios.create({
-  baseURL: 'https://strapi.yeonv.com'
-})
+import { cloud } from './Cloud/CloudComponents'
 
 const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
   const [name, setName] = useState('')
@@ -45,73 +41,47 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
   const getSystemConfig = useStore((state) => state.getSystemConfig)
   const setSystemConfig = useStore((state) => state.setSystemConfig)
   const getFullConfig = useStore((state) => state.getFullConfig)
-
   const getCloudConfigs = async () => {
-    const response = await cloud.get(
-      `configs?user.username=${localStorage.getItem('username')}`,
-      {
-        headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` }
+    try {
+      const response = await cloud.get(
+        `configs?user.username=${localStorage.getItem('username')}`
+      )
+      if (response.status !== 200) {
+        alert('No Access')
+        return
       }
-    )
-    if (response.status !== 200) {
-      // eslint-disable-next-line no-alert
-      alert('No Access')
-      return
+      const res = await response.data
+      setCloudConfigs(res)
+    } catch (error) {
+      console.log(error)
     }
-    const res = await response.data
-    setCloudConfigs(res)
   }
 
   const uploadPresetCloud = async (list: any, preset: any) => {
     const existing = await cloud.get(
       `presets?user.username=${localStorage.getItem('username')}&Name=${
         list[preset].name
-      }`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('jwt')}`
-        }
-      }
+      }`
     )
     const exists = await existing.data
-    const eff = await cloud.get(`effects?ledfx_id=${effectType}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('jwt')}`
-      }
-    })
+    const eff = await cloud.get(`effects?ledfx_id=${effectType}`)
 
     const effId = await eff.data[0].id
     // console.log(exists, existing)
     if (exists.length && exists.length > 0) {
-      cloud.put(
-        `presets/${exists[0].id}`,
-        {
-          Name: list[preset].name,
-          config: virtual.effect.config,
-          effect: effId,
-          user: localStorage.getItem('ledfx-cloud-userid')
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('jwt')}`
-          }
-        }
-      )
+      cloud.put(`presets/${exists[0].id}`, {
+        Name: list[preset].name,
+        config: virtual.effect.config,
+        effect: effId,
+        user: localStorage.getItem('ledfx-cloud-userid')
+      })
     } else {
-      cloud.post(
-        'presets',
-        {
-          Name: list[preset].name,
-          config: virtual.effect.config,
-          effect: effId,
-          user: localStorage.getItem('ledfx-cloud-userid')
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('jwt')}`
-          }
-        }
-      )
+      cloud.post('presets', {
+        Name: list[preset].name,
+        config: virtual.effect.config,
+        effect: effId,
+        user: localStorage.getItem('ledfx-cloud-userid')
+      })
     }
   }
 
@@ -119,29 +89,17 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
     const existing = await cloud.get(
       `presets?user.username=${localStorage.getItem('username')}&Name=${
         list[preset].name
-      }`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('jwt')}`
-        }
-      }
+      }`
     )
     const exists = await existing.data
     if (exists.length && exists.length > 0) {
-      cloud.delete(`presets/${exists[0].id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('jwt')}`
-        }
-      })
+      cloud.delete(`presets/${exists[0].id}`)
     }
   }
 
   const getCloudPresets = async () => {
-    const response = await cloud.get(`presets?effect.ledfx_id=${effectType}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` }
-    })
+    const response = await cloud.get(`presets?effect.ledfx_id=${effectType}`)
     if (response.status !== 200) {
-      // eslint-disable-next-line no-alert
       alert('No Access')
       return
     }
@@ -187,7 +145,7 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
     if (list && !Object.keys(list)?.length) {
       return (
         <Button style={{ margin: '1rem 0 0.5rem 1rem' }} size="medium" disabled>
-          No {CATEGORY === 'default_presets' ? '' : 'Custom'} Presets
+          No {CATEGORY === 'ledfx_presets' ? '' : 'Custom'} Presets
         </Button>
       )
     }
@@ -202,7 +160,7 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
         //   console.log(preset, diff(virtual.effect.config, list[preset].config))
         return (
           <Grid item key={preset}>
-            {CATEGORY !== 'default_presets' ? (
+            {CATEGORY !== 'ledfx_presets' ? (
               <PresetButton
                 buttonColor={
                   JSON.stringify(virtual.effect.config) ===
@@ -239,12 +197,14 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
   useEffect(() => {
     getVirtuals()
     if (effectType) getPresets(effectType)
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getVirtuals, effectType])
 
   useEffect(() => {
     if (features.cloud && !!localStorage.getItem('jwt') && isLogged) {
       getCloudPresets()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLogged, effectType])
 
   const syncPresets = async () => {
@@ -254,7 +214,7 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
       const promises = Object.keys(cloudEffects).flatMap((effect) => {
         return cloudEffects[effect].map((p: any, ind: number) => {
           return new Promise((resolve) => {
-            if (!presets.custom_presets[p.effect.ledfx_id]) {
+            if (!presets.user_presets[p.effect.ledfx_id]) {
               setTimeout(() => {
                 handleCloudPresets(p, true)
                 resolve(null)
@@ -278,8 +238,8 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
   // }, [cloudEffects, presets])
 
   useEffect(() => {
-    if (isLogged) getCloudConfigs()
-  }, [isLogged])
+    if (isLogged && features.cloud) getCloudConfigs()
+  }, [isLogged, features.cloud])
 
   return (
     <Card variant="outlined" className="step-device-three" style={style}>
@@ -290,42 +250,46 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
       />
       <CardContent>
         <Grid spacing={2} container>
-          {renderPresetsButton(presets?.default_presets, 'default_presets')}
+          {renderPresetsButton(
+            presets?.ledfx_presets || presets?.default_presets,
+            'ledfx_presets'
+          )}
         </Grid>
         <Divider style={{ margin: '1rem 0' }} />
         <Grid spacing={2} container>
-          {renderPresetsButton(presets?.custom_presets, 'custom_presets')}
+          {renderPresetsButton(
+            presets?.user_presets || presets?.custom_presets,
+            'user_presets'
+          )}
           <Grid item>
             <Popover
               popoverStyle={{ padding: '0.5rem' }}
               color="primary"
               variant="outlined"
-              onSingleClick={() => {
-                // eslint-disable-next-line no-console
-              }}
+              onSingleClick={() => {}}
               content={
                 <TextField
                   onKeyDown={(e: any) => e.key === 'Enter' && handleAddPreset()}
                   error={
-                    presets.default_presets &&
-                    (Object.keys(presets.default_presets).indexOf(name) > -1 ||
-                      Object.values(presets.default_presets).filter(
+                    presets.ledfx_presets &&
+                    (Object.keys(presets.ledfx_presets).indexOf(name) > -1 ||
+                      Object.values(presets.ledfx_presets).filter(
                         (p: any) => p.name === name
                       ).length > 0)
                   }
                   size="small"
                   id="presetNameInput"
                   label={
-                    presets.default_presets &&
-                    (Object.keys(presets.default_presets).indexOf(name) > -1 ||
-                      Object.values(presets.default_presets).filter(
+                    presets.ledfx_presets &&
+                    (Object.keys(presets.ledfx_presets).indexOf(name) > -1 ||
+                      Object.values(presets.ledfx_presets).filter(
                         (p: any) => p.name === name
                       ).length > 0)
                       ? 'Default presets are readonly'
-                      : presets.custom_presets &&
-                          (Object.keys(presets.custom_presets).indexOf(name) >
+                      : presets.user_presets &&
+                          (Object.keys(presets.user_presets).indexOf(name) >
                             -1 ||
-                            Object.values(presets.custom_presets).filter(
+                            Object.values(presets.user_presets).filter(
                               (p: any) => p.name === name
                             ).length > 0)
                         ? 'Preset already exsisting'
@@ -336,11 +300,11 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
                   onChange={(e) => {
                     setName(e.target.value)
                     if (
-                      presets.custom_presets &&
-                      (Object.keys(presets.custom_presets).indexOf(
+                      presets.user_presets &&
+                      (Object.keys(presets.user_presets).indexOf(
                         e.target.value
                       ) > -1 ||
-                        Object.values(presets.custom_presets).filter(
+                        Object.values(presets.user_presets).filter(
                           (p: any) => p.name === e.target.value
                         ).length > 0)
                     ) {
@@ -363,9 +327,9 @@ const PresetsCard = ({ virtual, effectType, presets, style }: any) => {
               }
               confirmDisabled={
                 name.length === 0 ||
-                (presets.default_presets &&
-                  (Object.keys(presets.default_presets).indexOf(name) > -1 ||
-                    Object.values(presets.default_presets).filter(
+                (presets.ledfx_presets &&
+                  (Object.keys(presets.ledfx_presets).indexOf(name) > -1 ||
+                    Object.values(presets.ledfx_presets).filter(
                       (p: any) => p.name === name
                     ).length > 0)) ||
                 !valid

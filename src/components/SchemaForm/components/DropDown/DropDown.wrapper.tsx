@@ -66,13 +66,12 @@ const EffectDropDown = ({
       category: effects[eid].category
     }))
 
-  const wledEffectOptions =
-    wledEffects &&
-    wledEffects.map((effect, index) => ({
-      name: effect,
-      id: `wled_${index}`,
-      category: 'WLED'
-    }))
+  const groups =
+    effectNames &&
+    effectNames.reduce((r: any, a: any) => {
+      r[a.category] = [...(r[a.category] || []), a]
+      return r
+    }, {})
 
   const allEffectOptions = [
     ...(effectNames || []),

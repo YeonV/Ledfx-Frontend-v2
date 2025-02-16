@@ -1,24 +1,25 @@
-/* eslint-disable no-param-reassign */
 import axios from 'axios'
 import { produce } from 'immer'
 import isElectron from 'is-electron'
 // import { useStore } from '@/store/useStore';
-// eslint-disable-next-line import/no-cycle
+
 import useStore from '../store/useStore'
 import type { IStore } from '../store/useStore'
-// eslint-disable-next-line prettier/prettier
-const baseURL = isElectron() ? 'http://localhost:8888' : window.location.href.split('/#')[0].replace(/\/+$/, '') || 'http://localhost:8888';
+const baseURL = isElectron()
+  ? 'http://localhost:8888'
+  : window.location.href.split('/#')[0].replace(/\/+$/, '') ||
+    'http://localhost:8888'
 const storedURL = window.localStorage.getItem('ledfx-host')
 
 const api = axios.create({
   baseURL: storedURL || baseURL
 })
 
-// eslint-disable-next-line import/prefer-default-export
 export const Ledfx = async (
   path: string,
   method?: 'GET' | 'PUT' | 'POST' | 'DELETE',
-  body?: any
+  body?: any,
+  snackbar: boolean = true
 ): Promise<any> => {
   const { setState } = useStore
   try {
@@ -38,7 +39,7 @@ export const Ledfx = async (
         response = await api.get(path)
         break
     }
-    if (response.data && response.data.payload) {
+    if (response.data && response.data.payload && snackbar) {
       setState(
         produce((state: IStore) => {
           state.ui.snackbar = {
@@ -55,7 +56,7 @@ export const Ledfx = async (
         return response.data
       }
     }
-    if (response.payload) {
+    if (response.payload && snackbar) {
       setState(
         produce((state: IStore) => {
           state.ui.snackbar = {

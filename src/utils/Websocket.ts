@@ -1,8 +1,5 @@
-/* eslint-disable no-use-before-define */
-/* eslint-disable consistent-return */
-/* eslint-disable no-underscore-dangle */
 /* eslint-disable array-callback-return */
-/* eslint-disable no-plusplus */
+
 import React, { useEffect, useLayoutEffect, useState } from 'react'
 
 import { useLocation } from 'react-router-dom'
@@ -44,27 +41,30 @@ function createSocket() {
           id: 1,
           type: 'subscribe_event'
         }
-        // console.log("Send");
         ;(ws as any).send(JSON.stringify(++req.id && req))
         const requ = {
           event_type: 'device_created',
           id: 1,
           type: 'subscribe_event'
         }
-        // console.log("Send");
         ;(ws as any).send(JSON.stringify(++requ.id && requ))
         const reque = {
           event_type: 'graph_update',
           id: 1,
           type: 'subscribe_event'
         }
-        // console.log("Send");
         ;(ws as any).send(JSON.stringify(++reque.id && reque))
+        const reqs = {
+          event_type: 'scene_activated',
+          id: 1,
+          type: 'subscribe_event'
+        }
+        ;(ws as any).send(JSON.stringify(++reqs.id && reqs))
       },
       onmessage: (event) => {
         if (JSON.parse(event.data).event_type === 'visualisation_update') {
           document.dispatchEvent(
-            new CustomEvent('YZ', {
+            new CustomEvent('visualisation_update', {
               detail: {
                 id: JSON.parse(event.data).vis_id,
                 pixels: JSON.parse(event.data).pixels
@@ -74,14 +74,14 @@ function createSocket() {
         }
         if (JSON.parse(event.data).event_type === 'devices_updated') {
           document.dispatchEvent(
-            new CustomEvent('YZold', {
+            new CustomEvent('devices_updated', {
               detail: 'devices_updated'
             })
           )
         }
         if (JSON.parse(event.data).event_type === 'device_created') {
           document.dispatchEvent(
-            new CustomEvent('YZ_device_created', {
+            new CustomEvent('device_created', {
               detail: {
                 id: 'device_created',
                 device_name: JSON.parse(event.data).device_name
@@ -91,8 +91,19 @@ function createSocket() {
         }
         if (JSON.parse(event.data).event_type === 'graph_update') {
           document.dispatchEvent(
-            new CustomEvent('YZoldDev', {
+            new CustomEvent('graph_update', {
               detail: JSON.parse(event.data)
+            })
+          )
+        }
+        if (JSON.parse(event.data).event_type === 'scene_activated') {
+          // console.log('scene_activated', JSON.parse(event.data))
+          document.dispatchEvent(
+            new CustomEvent('scene_activated', {
+              detail: {
+                id: 'scene_activated',
+                scene_id: JSON.parse(event.data).scene_id
+              }
             })
           )
         }
@@ -132,12 +143,14 @@ export const HandleWs = () => {
     if (!(pathname.startsWith('/Devices') || pathname.startsWith('/device'))) {
       setPixelGraphs([])
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
   useLayoutEffect(() => {
     if (!graphs || !graphsMulti) {
       setPixelGraphs([])
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graphs, graphsMulti])
 
   useEffect(() => {
@@ -174,6 +187,7 @@ export const HandleWs = () => {
         })
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wsReady, pixelGraphs])
 
   if (!wsReady) {

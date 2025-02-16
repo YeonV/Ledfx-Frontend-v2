@@ -95,13 +95,15 @@ const steps = [
 ]
 
 const TourHome = ({
-  className,
+  className = '',
   cally,
-  variant = 'button'
+  variant = 'button',
+  sx
 }: {
   className?: string
   variant?: string
   cally?: any
+  sx?: any
 }) => {
   const theme = useTheme()
   const tour = useStore((state) => state.tours.home)
@@ -126,7 +128,8 @@ const TourHome = ({
             bgcolor: theme.palette.primary.main,
             '&:hover': {
               bgcolor: theme.palette.primary.light
-            }
+            },
+            ...sx
           }}
         >
           <LiveHelp />
@@ -166,12 +169,6 @@ const TourHome = ({
       />
     </>
   )
-}
-
-TourHome.defaultProps = {
-  className: '',
-  variant: 'button',
-  cally: null
 }
 
 export default TourHome

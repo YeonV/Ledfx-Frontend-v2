@@ -16,7 +16,7 @@ import BladeBoolean from '../components/Boolean/BladeBoolean'
 import BladeSelect from '../components/String/BladeSelect'
 import BladeSlider from '../components/Number/BladeSlider'
 import BladeFrame from '../components/BladeFrame'
-import { SchemaFormDefaultProps, SchemaFormProps } from './SchemaForm.props'
+import { SchemaFormProps } from './SchemaForm.props'
 
 const PREFIX = 'SchemaForm'
 
@@ -109,7 +109,7 @@ const SchemaForm = ({
               case 'string': {
                 const group: any = {}
                 let audio_groups: any = []
-                if (schema?.properties?.audio_device?.enum) {
+                if (s.id === 'audio_device') {
                   // eslint-disable-next-line
                 for (const [key, value] of Object.entries(schema.properties.audio_device?.enum)) {
                     if (typeof value === 'string') {
@@ -179,7 +179,6 @@ const SchemaForm = ({
                     (type === 'mqtt_hass' && s.id === 'description')
                   ) && (
                     <BladeSelect
-                      // eslint-disable-next-line
                       children={undefined}
                       hideDesc={hideDesc}
                       type={type}
@@ -344,7 +343,5 @@ const SchemaForm = ({
     </Root>
   )
 }
-
-SchemaForm.defaultProps = SchemaFormDefaultProps
 
 export default SchemaForm
